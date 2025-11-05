@@ -156,8 +156,8 @@ class Graph(object):
         Raises:
             None
         """
-        nodes = self._neighbors[node].keys()
-        nodes.sort()
+        nodes = list(self._neighbors[node].keys())
+        nodes.sort(key=lambda x: x.__name__)
 
         current_percentage = 0.0
         if iteration is not None and total is not None:
@@ -280,7 +280,7 @@ class Graph(object):
         plt.margins(0.01)
         plt.subplots_adjust(bottom=0.15)
         hist = plt.hist(depths, histtype='bar', label=names, bins=10)
-        plt.yscale('log', nonposy='clip')
+        plt.yscale('log', nonpositive='clip')
         plt.gca().yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
         plt.rc('legend', **{'fontsize': 8})
         plt.legend(shadow=True, fancybox=True)
@@ -334,9 +334,9 @@ class Graph(object):
         names = []
         for node in self._nodes:
             assert len(self._nodes[node]['depth']), "node %s was never "\
-                "executed" % node.func_name
+                "executed" % node.__name__
             depths.append(self._nodes[node]['depth'])
-            names.append(node.func_name)
+            names.append(node.__name__)
 
         self._make_plot('Node execution per depth', depths, names,
                         os.path.join(directory, 'nodes.png'))
@@ -345,7 +345,7 @@ class Graph(object):
         names = []
         for node in self._nodes:
             counts.append(self._nodes[node]['seen'])
-            names.append(node.func_name)
+            names.append(node.__name__)
 
         self._make_bar_plot('Node inclusion count', counts, names,
                         os.path.join(directory, 'counts.png'))
@@ -355,10 +355,10 @@ class Graph(object):
         for node in self._neighbors:
             for sub_node in self._neighbors[node]:
                 assert len(self._neighbors[node][sub_node]['depth']), "Edge" \
-                    "%s->%s was not traversed" % (node.func_name,
-                                                  sub_node.func_name)
+                    "%s->%s was not traversed" % (node.__name__,
+                                                  sub_node.__name__)
                 depths.append(self._neighbors[node][sub_node]['depth'])
-                names.append('%s->%s' % (node.func_name, sub_node.func_name))
+                names.append('%s->%s' % (node.__name__, sub_node.__name__))
 
         self._make_plot('Edge traversal per depth', depths, names,
                         os.path.join(directory, 'edges.png'))
@@ -378,7 +378,7 @@ class Graph(object):
         text = []
         text.append('digraph G {')
         for node in self._nodes:
-            notes = [node.func_name]
+            notes = [node.__name__]
 
             if self._nodes[node]['chance'] != 1.0:
                 notes.append('chance=%.2f' % self._nodes[node]['chance'])
@@ -391,7 +391,7 @@ class Graph(object):
                 shape = ', shape=box'
             if node not in self._neighbors:
                 shape = ', shape=triangle'
-            text.append('    %s [label="%s"%s];' % (node.func_name,
+            text.append('    %s [label="%s"%s];' % (node.__name__,
                                                     '\\n'.join(notes), shape))
         for node in self._neighbors:
             for sub_node in self._neighbors[node]:
@@ -399,7 +399,7 @@ class Graph(object):
                 if self._neighbors[node][sub_node]['weight'] != 1:
                     label = str(self._neighbors[node][sub_node]['weight'])
                     sub_text = ' [label="%sx"]' % label
-                text.append('    %s -> %s%s;' % (node.func_name,
-                                                 sub_node.func_name, sub_text))
+                text.append('    %s -> %s%s;' % (node.__name__,
+                                                 sub_node.__name__, sub_text))
         text.append('}')
         return '\n'.join(text)

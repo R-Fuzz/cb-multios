@@ -22,7 +22,7 @@
 #
 
 import sys
-import ansi_x931_aes128
+from . import ansi_x931_aes128
 import random
 import string
 
@@ -31,7 +31,7 @@ def encode(data):
     """ Encodes a string to the 'cstring' encoding supported by the replay DTD.
 
     Args:
-        data: string value to be encoded
+        data: string or bytes value to be encoded
 
     Returns:
         String containing the encoded value
@@ -39,7 +39,10 @@ def encode(data):
     Raises:
         None
     """
-    chars = string.letters + string.digits + " ?!:."
+    # Convert bytes to string if necessary (Python 3 compatibility)
+    if isinstance(data, bytes):
+        data = data.decode('latin-1')
+    chars = string.ascii_letters + string.digits + " ?!:."
     return ''.join([x if x in chars else "\\x%02x" % ord(x) for x in data])
 
 
@@ -293,7 +296,11 @@ class Actions(object):
             seed = self._seed
             if seed is None:
                 seed = self.random_buffer(48)
-            out += self._wrap('seed', seed.encode('hex')) + '\n'
+            if isinstance(seed, bytes):
+                seed_hex = seed.hex()
+            else:
+                seed_hex = seed.encode('latin-1').hex()
+            out += self._wrap('seed', seed_hex) + '\n'
         out += self._wrap('replay', actions) + '\n'
         lines.append(self._wrap('pov', out))
         return '\n'.join(lines)
