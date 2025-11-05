@@ -1,6 +1,9 @@
 import os
 import sys
-import thread
+try:
+    import _thread as thread  # Python 3
+except ImportError:
+    import thread  # Python 2
 import threading
 
 # For OS specific tasks
