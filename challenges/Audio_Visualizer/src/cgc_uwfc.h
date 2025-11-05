@@ -3,6 +3,7 @@
 
 #include "cgc_stdlib.h"
 
+#pragma pack(push, 1)
 typedef struct {
     unsigned char chunk_id[4];
     unsigned int chunk_size;
@@ -20,6 +21,7 @@ typedef struct {
     unsigned int sub_chunk2_size;
     char* data;
 } uwfc_t;
+#pragma pack(pop)
 
 int cgc_validate_header(uwfc_t *header);
 uwfc_t *cgc_init_track();
