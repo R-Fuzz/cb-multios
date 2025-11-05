@@ -429,11 +429,11 @@ void cgc_ChangeDive( pDiveEntry DiveEntryNew ) {
 	return;
 }
 
-unsigned long int cgc_GetUInt32(){
+uint32_t cgc_GetUInt32(){
 	//need a new reveive function because receive_until checks for delim byte
 	//mostly borrowed from stdlib.c
     cgc_size_t rx = 0;
-    unsigned long int val = 0;
+    uint32_t val = 0;
     int ok = 0;
 	ok = cgc_receive( STDIN, &val, sizeof(val), &rx ) ;
 	if ( ( ok !=0 )||( rx == 0) )
