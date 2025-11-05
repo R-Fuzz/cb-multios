@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 CB POV / Poll communication verification tool
@@ -95,7 +95,7 @@ class Throw(object):
         self.pov_seed = pov_seed
 
     def log(self, data):
-        print "# %s" % data
+        print("# %s" % data)
 
     def count_bits_set(self, value):
         count = 0
@@ -105,7 +105,7 @@ class Throw(object):
         return count
 
     def read_all(self, fd, data_len):
-        data = ''
+        data = b''
         while len(data) < data_len:
             read = os.read(fd, data_len - len(data))
             assert len(read)
@@ -163,7 +163,7 @@ class Throw(object):
             if self.debug:
                 self.log("getting secret")
             data = self.read_all(pipefd, 4)
-            self.log("secret value: %s" % data.encode('hex'))
+            self.log("secret value: %s" % data.hex())
 
         if self.debug:
             self.log('done')
@@ -235,8 +235,8 @@ class Throw(object):
     def gen_seed(self):
         """ Prepare the seed that will be used in the replay """
         seed = os.urandom(48)
-        self.log("using seed: %s" % seed.encode('hex'))
-        return seed.encode('hex')
+        self.log("using seed: %s" % seed.hex())
+        return seed.hex()
 
     def run(self):
         """ Iteratively execute each of the actions within the POV
@@ -313,8 +313,8 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument('--cbs', nargs='+', required=True,
                           help='List of challenge binaries to run on the server')
-    required.add_argument('files', metavar='pov', type=str, nargs='+',
-                          help='pov file')
+    required.add_argument('--pov', metavar='pov_file', type=str, nargs='+', required=True,
+                          help='POV file(s)')
     parser.add_argument('--timeout', required=False, type=int, default=15,
                         help='Connect timeout')
     parser.add_argument('--debug', required=False, action='store_true',
@@ -326,11 +326,11 @@ def main():
 
     args = parser.parse_args()
 
-    assert len(args.files)
-    for filename in args.files:
+    assert len(args.pov)
+    for filename in args.pov:
         assert os.path.isfile(filename), "pov must be a file: %s" % repr(filename)
 
-    for pov in args.files:
+    for pov in args.pov:
         status = run_pov(args.cbs, pov, args.timeout,
                          args.debug, args.pov_seed)
     return status != 0
