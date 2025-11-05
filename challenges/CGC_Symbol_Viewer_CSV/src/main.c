@@ -22,6 +22,7 @@
  */
 
 #include "cgc_stdlib.h"
+#include "cgc_stdint.h"
 #include "cgc_string.h"
 #include "cgc_ctype.h"
 #include "cgc_readuntil.h"
@@ -164,7 +165,7 @@ void cgc_free_symbol(void *e)
 int main(int cgc_argc, char *cgc_argv[])
 {
   int i;
-  cgc_size_t size;
+  uint32_t size;  // Wire format expects exactly 32-bit size
   char *file;
   cgcf_Ehdr ehdr;
   cgcf_Shdr *shdr = NULL;
