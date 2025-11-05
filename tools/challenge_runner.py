@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
 import re
@@ -42,7 +42,7 @@ def run(challenges, timeout, seed, logfunc):
         os.closerange(3, last_fd)
 
         new_fd = 3  # stderr + 1
-        for i in xrange(len(challenges)):
+        for i in range(len(challenges)):
             # Create a pipe for every running binary
             rpipe, wpipe = os.pipe()
 
@@ -71,7 +71,7 @@ def run(challenges, timeout, seed, logfunc):
             cb_env['PIPE_COUNT'] = str(numpipes)
 
             # Store the HANDLE for each of the pipes
-            for i in xrange(len(challenges) * 2):
+            for i in range(len(challenges) * 2):
                 cb_env['PIPE_{}'.format(i)] = str(msvcrt.get_osfhandle(3 + i))  # First pipe is at 3
 
     # Start all challenges
@@ -97,6 +97,10 @@ def run(challenges, timeout, seed, logfunc):
 
 def chal_watcher(paths, procs, timeout, log):
     # Continue until any of the processes die
+
+    # Use default timeout of 120 seconds if not specified
+    if timeout is None:
+        timeout = 120
 
     # Wait until any process exits
     start = time()
@@ -178,7 +182,11 @@ def get_core_dump_regs(path, pid, log):
         ]
 
     # Read the registers
-    dbg_out = '\n'.join(sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE).communicate())
+    # Python 3: communicate() returns bytes, need to decode
+    stdout, stderr = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE).communicate()
+    stdout = stdout.decode('utf-8', errors='replace') if isinstance(stdout, bytes) else stdout
+    stderr = stderr.decode('utf-8', errors='replace') if isinstance(stderr, bytes) else stderr
+    dbg_out = '\n'.join([stdout, stderr])
 
     # Batch commands return successful even if there was an error loading a file
     # Check for these strings in the output instead
