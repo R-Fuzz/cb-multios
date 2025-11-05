@@ -29,7 +29,11 @@
 #include "cgc_stdint.h"
 
 #define NUM_FREE_LISTS 32
-#define HEADER_PADDING 24
+#ifdef __x86_64__
+#define HEADER_PADDING 48  // 64-bit: sizeof(struct blk_t) = 48
+#else
+#define HEADER_PADDING 24  // 32-bit: sizeof(struct blk_t) = 24
+#endif
 #define NEW_CHUNK_SIZE 262144
 #define ALIGNMENT 8
 

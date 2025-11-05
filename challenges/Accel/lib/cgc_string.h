@@ -14,5 +14,6 @@ extern char *cgc_strcpy(char *dest, const char *src);
 extern char *strncpy(char *dest, const char *src, cgc_size_t n);
 extern char *cgc_strchr(const char *s, int c);
 extern char *cgc_strsep(char **stringp, const char *delim);
+extern int cgc_strcmp(const char *s1, const char *s2);
 
 #endif /* !STRING_H_ */
