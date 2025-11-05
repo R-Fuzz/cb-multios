@@ -184,9 +184,7 @@ static bool builtin_rand(void *arg, Evaluator &eval, const vector<unique_ptr<Var
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
-
-    char *secret_page = (char *)secret_page_i;
+    char *secret_page = (char *)CGC_FLAG_PAGE_ADDRESS;
 
     Parser parser(program);
     if (parser.parse())

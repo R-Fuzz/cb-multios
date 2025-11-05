@@ -51,7 +51,13 @@ public:
         {
             items = (T *)cgc_malloc(sizeof(T) * size);
             for (unsigned int i = 0; i < size; i++)
-                items[i] = other.items[i];
+            {
+                T tmp(other.items[i]);  // Construct temp with copy constructor
+                T* dest = std::addressof(items[i]);
+                T* src = std::addressof(tmp);
+                cgc_memcpy(reinterpret_cast<void*>(dest), reinterpret_cast<const void*>(src), sizeof(T));
+                cgc_memset(reinterpret_cast<void*>(src), 0, sizeof(T));
+            }
         }
     }
     ~vector()

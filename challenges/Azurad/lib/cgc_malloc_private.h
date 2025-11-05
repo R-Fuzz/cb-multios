@@ -27,7 +27,14 @@
 #include "cgc_stdint.h"
 
 #define RUN_SIZE (1024 * 1024)
-#define TINY_SIZE (4)
+/* TINY_SIZE must be at least sizeof(void*) to hold free list pointers.
+ * On 64-bit, pointers are 8 bytes, so TINY_SIZE must be at least 8.
+ */
+#if defined(__LP64__) || defined(__x86_64__) || defined(__aarch64__)
+# define TINY_SIZE (8)
+#else
+# define TINY_SIZE (4)
+#endif
 #define SMALL_SIZE (16)
 #define LARGE_SIZE (128 * 1024)
 #define MAX_SIZE ((unsigned int)INT_MAX)
