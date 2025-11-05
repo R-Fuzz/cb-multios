@@ -390,7 +390,7 @@ int main(int cgc_argc, char *cgc_argv[])
     cgc_print_prompt();
 
     cgc_memset(buf, '\0', BUF_SIZE + 1);
-    if ((cgc_readline(1, buf, BUF_SIZE, &rx) < 0) || rx == (cgc_size_t)NULL) {
+    if ((cgc_readline(STDIN, buf, BUF_SIZE, &rx) < 0) || rx == (cgc_size_t)NULL) {
       cgc_free(buf);
       continue;
     }

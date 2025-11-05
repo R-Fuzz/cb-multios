@@ -24,6 +24,8 @@
 #ifndef __STRING__H
 #define __STRING__H
 
+#include "../lib/cgc_string.h"
+
 #define DEFAULT_S_SZ 128
 
 typedef struct string string;
