@@ -112,7 +112,8 @@ int32_t cgc_ReadMatrix(int32_t *m) {
 	// BUG: 8-bit integer overflow possible
 	uint8_t matrix_size;
 #endif
-	matrix_size = x * y;
+	// Fix: Use global X and Y instead of local x and y (which may be uninitialized on second call)
+	matrix_size = X * Y;
 	if (matrix_size > MAX_MATRIX_SIZE) {
 		cgc_puts("matrix too large");
 		return(0);

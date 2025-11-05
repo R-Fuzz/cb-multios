@@ -52,7 +52,7 @@ void *cgc_calloc( cgc_size_t count, cgc_size_t obj_size )
 void *cgc_add_free_list( cgc_size_t request_size )
 {
     // Include header
-    cgc_size_t grow_size = (request_size + 4);
+    cgc_size_t grow_size = (request_size + sizeof(tMallocAllocHdr));
 
     // Increases the size of the free list
     if ( grow_size % ALLOC_PAGE_SIZE != 0 )
@@ -86,12 +86,12 @@ void *cgc_add_free_list( cgc_size_t request_size )
 void *cgc_malloc( cgc_size_t alloc_size )
 {
     // Allocate
-    if ( alloc_size < 8 )
-        alloc_size = 8;
-    else if ( alloc_size % 4 != 0 )
+    if ( alloc_size < sizeof(tMallocAllocFtr) )
+        alloc_size = sizeof(tMallocAllocFtr);
+    else if ( alloc_size % sizeof(cgc_size_t) != 0 )
     {
-        alloc_size = (alloc_size >> 2) + 1;
-        alloc_size = (alloc_size << 2);
+        alloc_size = (alloc_size / sizeof(cgc_size_t)) + 1;
+        alloc_size = (alloc_size * sizeof(cgc_size_t));
     }
 
     // Scan free list for available objects
