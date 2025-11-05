@@ -7,7 +7,12 @@
 typedef __builtin_va_list va_list;
 
 #define va_start(ap, last) __builtin_va_start(ap, last)
+#define va_arg(ap, type) __builtin_va_arg(ap, type)
+#define va_copy(dest, src) __builtin_va_copy(dest, src)
+#define va_end(ap) __builtin_va_end(ap)
 #endif
+
+#define MAX_PRINTF_ARGS 32
 
 struct _FILE {
    int fd;
@@ -323,7 +328,34 @@ static void cgc_printf_core(unsigned int (*func)(char, void *, int), void *user,
    int prec_value;
    int field_arg;
    int length;
-   char **args = (char**)ap;
+
+   // Extract varargs properly for both 32-bit and 64-bit
+   // First, count the number of arguments needed
+   va_list ap_count;
+   va_copy(ap_count, ap);
+
+   int max_arg_index = 0;
+   const char *fmt_scan = format;
+   while (*fmt_scan) {
+      if (*fmt_scan == '%' && *(fmt_scan + 1) != '%') {
+         max_arg_index++;
+      }
+      fmt_scan++;
+   }
+
+   // Limit to MAX_PRINTF_ARGS to prevent stack overflow
+   if (max_arg_index > MAX_PRINTF_ARGS) {
+      max_arg_index = MAX_PRINTF_ARGS;
+   }
+
+   // Extract all arguments into an array
+   cgc_size_t arg_values[MAX_PRINTF_ARGS];
+   for (int i = 0; i < max_arg_index; i++) {
+      arg_values[i] = va_arg(ap_count, cgc_size_t);
+   }
+   va_end(ap_count);
+
+   cgc_size_t *args = arg_values;
    for (ch = *format++; ch; ch = *format++) {
       switch (state) {
          case STATE_NORMAL:
