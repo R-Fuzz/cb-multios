@@ -258,6 +258,7 @@ Dungeon dungeon;
 char move=0;
 int result=0;
 
+	cgc_bzero((char*)&dungeon, sizeof(Dungeon));
 	cgc_buildDungeon(&dungeon);
 	cgc_initScoreboard(&dungeon);
 
