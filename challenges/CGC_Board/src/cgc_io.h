@@ -42,4 +42,6 @@ void cgc_send_error(const char *error, const char *command);
 int cgc_sink_error(const char *buf);
 move_t cgc_str_to_move(const char *str);
 
+#define sink_error cgc_sink_error
+
 #endif
