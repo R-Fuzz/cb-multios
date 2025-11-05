@@ -31,7 +31,11 @@ struct chunk {
 } __attribute__((packed));
 
 static cgc_size_t size_class_sizes[] = {
+#if defined(__LP64__) || defined(__x86_64__) || defined(__aarch64__)
+    32, 64, 128, 256, 512, 1024, 2048, 4096
+#else
     16, 32, 64, 128, 256, 512, 1024, 2048
+#endif
 };
 
 #define NUM_SIZE_CLASSES (sizeof(size_class_sizes) / sizeof(cgc_size_t))
