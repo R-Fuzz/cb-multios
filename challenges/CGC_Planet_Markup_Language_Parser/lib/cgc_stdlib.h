@@ -52,4 +52,6 @@ cgc_size_t cgc_strlen( char * );
 cgc_size_t cgc_itoa( char *, cgc_size_t, cgc_size_t );
 void cgc_puts( char *t );
 
+#define strncpy cgc_strncpy
+
 #endif // __STDLIB_H__
