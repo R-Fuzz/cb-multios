@@ -380,7 +380,9 @@ class Throw(object):
         if value is not None:
             self.values[key] = value
             if self.debug:
-                self.log('set %s to %s' % (key, value.encode('hex')))
+                # Python 3: handle both bytes and str
+                hex_val = value.hex() if isinstance(value, bytes) else value.encode().hex()
+                self.log('set %s to %s' % (key, hex_val))
             self.log_ok('set %s' % (key))
 
     def _read_len(self, read_len):
@@ -453,7 +455,9 @@ class Throw(object):
             assert read_args['echo'] in ['yes', 'no', 'ascii']
 
             if 'yes' == read_args['echo']:
-                self.log('received %s' % data.encode('hex'))
+                # Python 3: handle both bytes and str
+                hex_data = data.hex() if isinstance(data, bytes) else data.encode().hex()
+                self.log('received %s' % hex_data)
             elif 'ascii' == read_args['echo']:
                 self.log('received %s' % repr(data))
 
@@ -490,7 +494,9 @@ class Throw(object):
 
         if self.debug:
             if args['echo'] == 'yes':
-                self.log('writing: %s' % to_send.encode('hex'))
+                # Python 3: handle both bytes and str
+                hex_send = to_send.hex() if isinstance(to_send, bytes) else to_send.encode().hex()
+                self.log('writing: %s' % hex_send)
             elif args['echo'] == 'ascii':
                 self.log('writing: %s' % repr(to_send))
 
@@ -515,7 +521,11 @@ class Throw(object):
             (int): amount of data written, or 0 on error
         """
         try:
+            # Python 3: stdin.write() expects bytes
+            if isinstance(data, str):
+                data = data.encode('latin-1')
             self.procs[0].stdin.write(data)
+            self.procs[0].stdin.flush()  # Python 3: must flush to send data immediately
             return len(data)
         except IOError:
             return 0
@@ -530,15 +540,27 @@ class Throw(object):
             (str): data read from the pipe
         """
         # Wait until there's data in the raw buffer
+        # Add timeout check to prevent infinite wait
+        wait_time = 0
         while len(self.pipe_raw) == 0:
+            # Check if process is still alive
+            if self.procs and self.procs[0].poll() is not None:
+                # Process has terminated, return empty if no data
+                break
             time.sleep(0.1)
+            wait_time += 0.1
+            # Prevent infinite wait (max 10 seconds for data)
+            if wait_time > 10:
+                break
 
         # Fill up the temp buffer until we have the requested amount of data
         while len(self.pipe_buf) < size and len(self.pipe_raw) != 0:
             self.pipe_buf += self.pipe_raw.pop(0)
 
-            # Convert CRLF to LF to match what the POLLs expect
-            if self.pipe_buf.endswith('\r\n'):
+            # Convert CRLF to LF only on Windows where programs output CRLF
+            # On Linux/macOS, programs output raw binary data and CRLF sequences
+            # may be legitimate binary data that should not be converted
+            if os.name == 'nt' and self.pipe_buf.endswith('\r\n'):
                 self.pipe_buf = self.pipe_buf[:-2] + '\n'
 
         # Return the amount requested
@@ -557,8 +579,11 @@ class Throw(object):
         """
         while True:
             c = pipe.read(1)
-            if c in [None, '']:
+            # Python 3: pipe.read() returns bytes, need to decode
+            if c in [None, b'', '']:
                 break
+            if isinstance(c, bytes):
+                c = c.decode('latin-1')
             self.pipe_raw.append(c)
 
     def gen_seed(self):
@@ -566,11 +591,12 @@ class Throw(object):
         seed = self.pov.seed
 
         if seed is None:
-            print "# No seed specified, using random seed"
+            print("# No seed specified, using random seed")
             seed = os.urandom(48)
 
-        self.log("using seed: %s" % seed.encode('hex'))
-        return seed.encode('hex')
+        # Python 3: bytes.encode('hex') -> bytes.hex()
+        self.log("using seed: %s" % seed.hex())
+        return seed.hex()
 
     def run(self):
         """ Iteratively execute each of the actions within the POV
@@ -602,7 +628,7 @@ class Throw(object):
 
         # Start a thread to buffer data from the challenges' stdout
         buf_thread = threading.Thread(target=self.buffer_pipe_data, args=(self.procs[0].stdout,))
-        buf_thread.setDaemon(True)
+        buf_thread.daemon = True
         buf_thread.start()
 
         # Everything is ready, now we can run the test
@@ -705,7 +731,7 @@ class POV(object):
         """
         for i in [' ', '\n', '\r', '\t']:
             data = data.replace(i, '')
-        return data.decode('hex')
+        return bytes.fromhex(data)
 
     @staticmethod
     def compile_pcre(data):
@@ -792,7 +818,8 @@ class POV(object):
             else:
                 assert val.lower() in hex_chars
                 hex_tmp += val
-                out.append(hex_tmp.decode('hex'))
+                # Python 3: bytes.fromhex returns bytes, need to decode to str for joining
+                out.append(bytes.fromhex(hex_tmp).decode('latin-1'))
                 hex_tmp = ''
                 state = 0
         return ''.join(out)
@@ -1029,7 +1056,8 @@ class POV(object):
 
         assert len(data) > 0
 
-        children = data.getchildren()
+        # Python 3: getchildren() removed, use list() instead
+        children = list(data)
 
         read_until = children.pop(0)
 
@@ -1191,8 +1219,9 @@ class POV(object):
             seed = seed_tree.text
             assert len(seed) == 96
             if self.seed is not None:
-                print "# Seed is set by XML and command line, using XML seed"
-            self.seed = seed.decode('hex')
+                print("# Seed is set by XML and command line, using XML seed")
+            # Python 3: decode('hex') -> bytes.fromhex()
+            self.seed = bytes.fromhex(seed)
 
         parse_fields = {
             'decl': self.parse_decl,
@@ -1218,7 +1247,7 @@ class POV(object):
             None
         """
         for step in self._steps:
-            print repr(step)
+            print(repr(step))
 
 
 class Results(object):
@@ -1244,7 +1273,7 @@ class Results(object):
             None
         """
         got_passed, got_failed, got_logs = results
-        print '\n'.join(got_logs + ['END REPLAY'])
+        print('\n'.join(got_logs + ['END REPLAY']))
         self.passed += got_passed
         self.failed += got_failed
         if got_failed > 0:
@@ -1317,8 +1346,8 @@ def main():
     required = parser.add_argument_group(title='required arguments')
     required.add_argument('--cbs', nargs='+', required=True,
                           help='List of challenge binaries to run on the server')
-    required.add_argument('files', metavar='xml_file', type=str, nargs='+',
-                          help='POV/Poll XML file')
+    required.add_argument('--xml', metavar='xml_file', type=str, nargs='+', required=True,
+                          help='POV/Poll XML file(s)')
     parser.add_argument('--concurrent', required=False, type=int, default=1,
                         help='Number of Polls/POVs to throw concurrently')
     parser.add_argument('--timeout', required=False, type=int, default=None,
@@ -1343,7 +1372,7 @@ def main():
         raise Exception('CB Seeds can only be set with seed negotiation')
 
     povs = []
-    for pov_filename in args.files:
+    for pov_filename in args.xml:
         pov_xml = []
         if pov_filename.endswith('.xml'):
             with open(pov_filename, 'rb') as pov_fh:
@@ -1359,9 +1388,12 @@ def main():
             povs.append((xml, pov_filename))
 
     result_handler = Results()
-    pool = mp.Pool(args.concurrent)
+    pool = None
     pool_responses = []
     try:
+        if args.concurrent > 1:
+            pool = mp.Pool(args.concurrent)
+
         for pov in povs:
             pov_args = (args.cbs, pov, args.timeout, args.debug,
                         args.negotiate, args.cb_seed, args.munge_seed)
@@ -1376,19 +1408,19 @@ def main():
             response.get()
 
     except KeyboardInterrupt:
-        print "# Interrupted.  Logging as error"
+        print("# Interrupted.  Logging as error")
         result_handler.errors += 1
-        if args.concurrent > 1:
+        if pool is not None:
             pool.terminate()
     finally:
-        if args.concurrent > 1:
+        if pool is not None:
             pool.close()
             pool.join()
 
-    print "# total tests passed: %d" % result_handler.passed
-    print "# total tests failed: %d" % result_handler.failed
-    print "# polls passed: %d" % result_handler.full_passed
-    print "# polls failed: %d" % result_handler.errors
+    print("# total tests passed: %d" % result_handler.passed)
+    print("# total tests failed: %d" % result_handler.failed)
+    print("# polls passed: %d" % result_handler.full_passed)
+    print("# polls failed: %d" % result_handler.errors)
 
     if args.failure_ok:
         return 0
