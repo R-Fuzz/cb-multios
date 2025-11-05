@@ -83,7 +83,7 @@ class Tester:
         # If the test failed to run, consider it failed
         if 'TOTAL TESTS' not in output:
             debug('\nWARNING: there was an error running a test')
-            print output
+            print(output)
             return 0, 0
 
         if 'timed out' in output:
@@ -108,12 +108,16 @@ class Tester:
                   '--xml_dir', xml_dir,
                   '--concurrent', '4',
                   '--timeout', '5',
-                  '--negotiate_seed', '--cb'] + map(add_ext, bin_names)
+                  '--negotiate_seed', '--cb'] + list(map(add_ext, bin_names))
         if should_core:
             cb_cmd += ['--should_core']
 
         p = subprocess.Popen(cb_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=TOOLS_DIR)
         out, err = p.communicate()
+
+        # Decode bytes to string for Python 3
+        if isinstance(out, bytes):
+            out = out.decode('utf-8', errors='replace')
 
         total, passed = self.parse_results(out)
         score.total += total
@@ -195,7 +199,7 @@ def test_challenges(chal_names):
         chals.append(c)
 
     # Create and run all testers
-    testers = map(Tester, chals)
+    testers = list(map(Tester, chals))
     for test in testers:
         test.run()
 
@@ -340,7 +344,19 @@ def main():
                         default=None, type=str,
                         help='If provided, an excel spreadsheet will be generated and saved here')
 
+    parser.add_argument('--build-dir', type=str, default=None,
+                        help='Build directory to use (e.g., "build" or "build64"). Defaults to "build"')
+
     args = parser.parse_args(sys.argv[1:])
+
+    # Override BUILD_DIR if --build-dir is specified
+    global BUILD_DIR
+    if args.build_dir:
+        BUILD_DIR = os.path.join(ROOT, args.build_dir, 'challenges')
+        if not os.path.isdir(BUILD_DIR):
+            print('ERROR: Build directory does not exist: {}'.format(BUILD_DIR))
+            sys.exit(1)
+        debug('Using build directory: {}\n'.format(BUILD_DIR))
 
     # Disable other tests depending on args
     if args.povs:
