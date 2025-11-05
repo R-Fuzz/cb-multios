@@ -65,9 +65,8 @@ void RunSimulation( uint8_t *pSecretPage )
 }
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-	void *secret_page = (void *)secret_page_i;
+	void *secret_page = (void *)CGC_FLAG_PAGE_ADDRESS;
 
 	uint32_t *pPageArray = (uint32_t*)secret_page;
 	uint32_t ts = pPageArray[0] + pPageArray[1] + pPageArray[2] + pPageArray[3];
