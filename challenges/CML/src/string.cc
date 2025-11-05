@@ -32,12 +32,10 @@ String::String(const char *str)
 
 String *String::create(const char *str)
 {
-    unsigned int length = cgc_strlen(str) + 1;
+    unsigned int length = cgc_strlen(str);
+    // sizeof(String) = 1 (for d_data[1]), so total = 1 + length = strlen + 1 (includes null terminator)
     void *mem = safe_malloc(sizeof(String) + length);
-    String *s = new String(str);
-cgc_memcpy(mem, s, sizeof(String));
-delete s;
-s = (String *) mem;
-
+    String *s = (String *)mem;
+    cgc_strcpy(s->d_data, str);
     return s;
 }

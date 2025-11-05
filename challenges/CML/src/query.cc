@@ -29,6 +29,7 @@ static uint16_t swap16(uint16_t x)
 
 Query::Query(const unsigned char *src, unsigned int length)
 {
+    cgc_memset(d_insn, 0, sizeof(d_insn));
     d_insn[0].d_op = Op::ERROR;
 
     parse(src, length);

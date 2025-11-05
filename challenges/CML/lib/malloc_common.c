@@ -378,7 +378,7 @@ void *cgc_malloc_alloc(malloc_t *heap, cgc_size_t n)
     if (n > MAX_SIZE)
         return NULL;
 
-    n = ALIGNED(n, 4);
+    n = ALIGNED(n, TINY_SIZE);  // Align to TINY_SIZE instead of 4
 
     if (n < TINY_SIZE)
         ptr = tiny_alloc(heap, TINY_SIZE);

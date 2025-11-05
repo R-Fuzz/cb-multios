@@ -40,7 +40,7 @@ public:
     inline const char *cstr() const { return d_data; }
     inline void destroy() { cgc_free(this); }
 private:
-    char d_data[];
+    char d_data[1];  // Standard-compliant (was char d_data[] - flexible array)
 };
 
 class StringComparator

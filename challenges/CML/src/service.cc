@@ -24,9 +24,8 @@
 #include "cgc_interface.h"
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    char *secret_page = (char *)secret_page_i;
+    char *secret_page = (char *)CGC_FLAG_PAGE_ADDRESS;
     (void) secret_page;
     (void) unused;
 
