@@ -10,7 +10,9 @@ void *cgc_realloc(void *ptr, cgc_size_t size);
 void cgc_free(void *ptr);
 
 long strtol(const char *, char **, int);
+long cgc_strtol(const char *, char **, int);
 unsigned long strtoul(const char *, char **, int);
+unsigned long cgc_strtoul(const char *, char **, int);
 
 int cgc_putenv(const char *name, const unsigned char *value, cgc_size_t value_len);
 unsigned char *cgc_getenv(const char *name, cgc_size_t *len);
