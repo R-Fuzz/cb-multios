@@ -574,8 +574,8 @@ void cgc_free(void *ptr) {
 
     chunkHeader = (heap_header*)(((char*)ptr)-sizeof(heap_header));
     chunkHeader->flags = FREE_FLAG;
-    blockHead = (heap_block_header *)((int)&ptr & 0xfffff000);
-    blockHead->remaining_size+=chunkHeader->size;
+    blockHead = (heap_block_header *)((cgc_size_t)ptr & ~(cgc_size_t)0xfff);
+    blockHead->remaining_size+=chunkHeader->size+sizeof(heap_header);
     return;
 }
 
@@ -602,20 +602,21 @@ void *cgc_malloc(cgc_size_t size) {
             cgc_puts("Not enough space available to allocate more heap.  Failure.");
             cgc__terminate(-1);
         }
+        cgc_memset(blockHead->next, 0, 4096);
         blockHead = blockHead->next;
         blockHead->remaining_size = 4096-sizeof(heap_block_header);
-    } else {
-        heap_header *chunkHeader;
-        blockHead->remaining_size-=size;
-        chunkHeader = (heap_header *)blockHead->data;
-
-        while((chunkHeader->flags & INUSE_FLAG) && (chunkHeader->size < size+sizeof(heap_header)))
-            chunkHeader = (heap_header *)(((void *)(chunkHeader)+sizeof(heap_header)) + chunkHeader->size);
-        chunkHeader->size = size;
-        chunkHeader->flags = INUSE_FLAG;
-        return (char *)chunkHeader+sizeof(heap_header);
+        blockHead->next = NULL;
     }
-    return 0;
+
+    heap_header *chunkHeader;
+    blockHead->remaining_size-=size+sizeof(heap_header);
+    chunkHeader = (heap_header *)blockHead->data;
+
+    while((chunkHeader->flags & INUSE_FLAG) && (chunkHeader->size < size+sizeof(heap_header)))
+        chunkHeader = (heap_header *)(((void *)(chunkHeader)+sizeof(heap_header)) + chunkHeader->size);
+    chunkHeader->size = size;
+    chunkHeader->flags = INUSE_FLAG;
+    return (char *)chunkHeader+sizeof(heap_header);
 }
 
 
