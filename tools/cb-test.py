@@ -37,9 +37,15 @@ import signal
 import subprocess
 import sys
 import time
-import thread
+try:
+    import _thread as thread  # Python 3
+except ImportError:
+    import thread  # Python 2
 import threading
-import Queue
+try:
+    import queue as Queue  # Python 3
+except ImportError:
+    import Queue  # Python 2
 import ansi_x931_aes128
 
 from common import IS_WINDOWS
@@ -268,11 +274,21 @@ class Runner(object):
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
+        # Decode bytes to string for Python 3
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode('utf-8', errors='replace')
+        if isinstance(stdout, bytes):
+            stdout_decoded = stdout.decode('utf-8', errors='replace')
+        else:
+            stdout_decoded = stdout
         if len(stderr):
             for line in stderr.split('\n'):
                 logging.error('%s (stderr): %s', cmd[0], repr(line))
         self.log_fh.flush()
-        self.log_fh.write(stdout)
+        if isinstance(stdout, bytes):
+            self.log_fh.write(stdout_decoded)
+        else:
+            self.log_fh.write(stdout)
         self.log_fh.flush()
         return process.returncode, stdout
 
@@ -307,7 +323,12 @@ class Runner(object):
         Raises:
             None
         """
-        if 'debian' in platform.dist()[0]:
+        try:
+            # platform.dist() removed in Python 3.8
+            dist_name = platform.dist()[0] if hasattr(platform, 'dist') else platform.freedesktop_os_release().get('ID', '')
+        except:
+            dist_name = ''
+        if 'debian' in dist_name:
             import apt
             cache = apt.Cache()
             cgc_packages = []
@@ -340,7 +361,8 @@ class Runner(object):
         Raises:
             None
         """
-        for name, value in signal.__dict__.iteritems():
+        # Python 3: iteritems() -> items()
+        for name, value in signal.__dict__.items():
             if sig_id == value:
                 return name
         return 'UNKNOWN'
@@ -359,9 +381,11 @@ class Runner(object):
         """
         cb_paths = [os.path.join(self.directory, cb) for cb in self.cb_list]
 
-        replay_bin = os.path.join('.', 'cb-replay.py')
+        # Get the directory where this script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        replay_bin = os.path.join(script_dir, 'cb-replay.py')
         if xml[0].endswith(add_ext('.pov')):
-            replay_bin = os.path.join('.', 'cb-replay-pov.py')
+            replay_bin = os.path.join(script_dir, 'cb-replay-pov.py')
 
         replay_cmd = [sys.executable, replay_bin, '--debug', '--cbs'] + cb_paths
 
@@ -373,13 +397,13 @@ class Runner(object):
             if self.cb_seed is not None:
                 replay_cmd += ['--cb_seed', self.cb_seed]
 
-        if self.pov_seed and replay_bin == os.path.join('.', 'cb-replay-pov.py'):
+        if self.pov_seed and replay_bin == os.path.join(script_dir, 'cb-replay-pov.py'):
             replay_cmd += ['--pov_seed', self.pov_seed]
 
         if self.should_debug:
             replay_cmd += ['--debug']
 
-        if replay_bin == os.path.join('.', 'cb-replay.py'):
+        if replay_bin == os.path.join(script_dir, 'cb-replay.py'):
             if self.failure_ok:
                 replay_cmd += ['--failure_ok']
 
@@ -389,7 +413,11 @@ class Runner(object):
         if self.max_send is not None and self.max_send > 0:
             replay_cmd += ['--max_send', '%d' % self.max_send]
 
-        replay_cmd += xml
+        # Add appropriate flag based on which replay script is being used
+        if replay_bin == os.path.join(script_dir, 'cb-replay-pov.py'):
+            replay_cmd += ['--pov'] + xml
+        else:
+            replay_cmd += ['--xml'] + xml
 
         return self.launch(replay_cmd)
 
@@ -518,7 +546,8 @@ class Runner(object):
 
             seed = match.group(1)
 
-        prng = ansi_x931_aes128.PRNG(seed.decode('hex'))
+        # Python 3: decode('hex') -> bytes.fromhex()
+        prng = ansi_x931_aes128.PRNG(bytes.fromhex(seed))
         flag_page = prng.get(0x1000)
 
         match = re.search(r'secret value: ([a-fA-F0-9]+)', replay_stdout)
@@ -530,14 +559,16 @@ class Runner(object):
                 logging.warning('ok - POV type 2 did not return a secret value as expected', extra={'raw': True})
                 return 0
 
-        value = match.group(1).decode('hex')
+        # Python 3: decode('hex') -> bytes.fromhex()
+        value = bytes.fromhex(match.group(1))
         if value not in flag_page:
             if not self.should_core:
                 logging.warning('ok - POV type 2 secret value is not part of the secret page (as expected)',
                                 extra={'raw': True})
                 return 0
             else:
-                logging.error('not ok - TYPE 2 POV FAILED.  %s not in %s', value.encode('hex'), flag_page.encode('hex'),
+                # Python 3: bytes.encode('hex') -> bytes.hex()
+                logging.error('not ok - TYPE 2 POV FAILED.  %s not in %s', value.hex(), flag_page.hex(),
                               extra={'raw': True})
                 return -1
 
@@ -577,6 +608,10 @@ class Runner(object):
             None
         """
         ret, replay_stdout = replay_result
+
+        # Decode bytes to string for Python 3
+        if isinstance(replay_stdout, bytes):
+            replay_stdout = replay_stdout.decode('utf-8', errors='replace')
 
         passed = 0
         for xml in xml_list:
