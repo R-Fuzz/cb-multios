@@ -37,7 +37,7 @@ class TemplateGenerator(Actions):
 
 	def newBudgetItem(self):
 		if(len(self.map) < 128):
-			instruction = pack('l', 1)
+			instruction = pack('I', 1)
 			self.write(instruction)
 			key = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(9))
 			self.write(key + '\x07')
@@ -52,7 +52,7 @@ class TemplateGenerator(Actions):
 	def newInBudgetTransaction(self):
 		if(len(self.map) == 0):
 			return 0
-		instruction = pack('l', 2)
+		instruction = pack('I', 2)
 		self.write(instruction)
 		pair = random.choice(self.map)
 		while(pair[1] < 0):
@@ -66,7 +66,7 @@ class TemplateGenerator(Actions):
 	def newOverBudgetTransaction(self):
 		if(len(self.map) == 0):
 			return 0
-		instruction = pack('l', 2)
+		instruction = pack('I', 2)
 		self.write(instruction)
 		pair = random.choice(self.map)
 		while(pair[1] < 0):
@@ -81,7 +81,7 @@ class TemplateGenerator(Actions):
 	def getBudget(self):
 		if(len(self.map) == 0):
 			return 0
-		instruction = pack('l', 3)
+		instruction = pack('I', 3)
 		self.write(instruction)
 		pair = random.choice(self.map)
 		self.write(pair[0] + '\x07')
@@ -90,14 +90,14 @@ class TemplateGenerator(Actions):
 	def deleteBudget(self):
 		if(len(self.map) == 0):
 			return 0
-		instruction = pack('l', 6)
+		instruction = pack('I', 6)
 		self.write(instruction)
 		pair = random.choice(self.map)
 		self.write(pair[0] + '\x07')
 		self.map.remove(pair)
 
 	def sendReport(self):
-		instruction = pack('l', 7)
+		instruction = pack('I', 7)
 		self.write(instruction)
 		totalBalance = sum([pair[1] for pair in self.map])
 		for x in range(0, len(self.map)):
@@ -106,6 +106,6 @@ class TemplateGenerator(Actions):
 		self.read(length=40, expect=str(totalBalance)+"[0]*", expect_format='pcre')
 
 	def quit(self):
-		instruction = pack('l', 8)
+		instruction = pack('I', 8)
 		self.write(instruction)
 		return -1

@@ -24,9 +24,9 @@
 #include "cgc_service.h"
 #include "cgc_map.h"
 
-void cgc_receiveInstruction(unsigned long *instruction) {
+void cgc_receiveInstruction(uint32_t *instruction) {
 	int bytes_read;
-	bytes_read = cgc_recv(STDIN, (char *)instruction, sizeof(unsigned long));
+	bytes_read = cgc_recv(STDIN, (char *)instruction, sizeof(uint32_t));
 	if(bytes_read < 0)
 		cgc__terminate(RECEIVE_ERROR);
 }
@@ -89,13 +89,13 @@ void cgc_sendReport(Map *map) {
 
 int main(int cgc_argc, char *cgc_argv[]) {
 	Map* map=NULL;
-	unsigned long instruction;
+	uint32_t instruction;
 	char key[MAX_KEY_SIZE+1];
 	int value;
 	int ret;
 
 	while(1) {
-		
+
 		cgc_receiveInstruction(&instruction);
 
 		if(instruction == NEW_BUDGET_INSTR) {
