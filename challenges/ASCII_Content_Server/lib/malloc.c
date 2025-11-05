@@ -28,8 +28,8 @@ THE SOFTWARE.
 
 #define ALLOC_PAGE_SIZE     (4096)
 
-#define FREE_BLOCK_NEXT( block )    (((tMallocAllocFtr *)((void *)block + (((tMallocAllocHdr *)block)->alloc_size & ~0x3)-sizeof(tMallocAllocHdr)))->pNext)
-#define FREE_BLOCK_PREV( block )    (((tMallocAllocFtr *)((void *)block + (((tMallocAllocHdr *)block)->alloc_size & ~0x3)-sizeof(tMallocAllocHdr)))->pPrev)
+#define FREE_BLOCK_NEXT( block )    (((tMallocAllocFtr *)((void *)block + (((tMallocAllocHdr *)block)->alloc_size & ~0x3)-(sizeof(tMallocAllocFtr)-sizeof(tMallocAllocHdr))))->pNext)
+#define FREE_BLOCK_PREV( block )    (((tMallocAllocFtr *)((void *)block + (((tMallocAllocHdr *)block)->alloc_size & ~0x3)-(sizeof(tMallocAllocFtr)-sizeof(tMallocAllocHdr))))->pPrev)
 
 #define SET_BIT( val, bit ) (val |= (bit))
 #define CLEAR_BIT( val, bit ) (val &= ~(bit))
@@ -52,7 +52,7 @@ void *cgc_calloc( cgc_size_t count, cgc_size_t obj_size )
 void *cgc_add_free_list( cgc_size_t request_size )
 {
     // Include header
-    cgc_size_t grow_size = (request_size + 4);
+    cgc_size_t grow_size = (request_size + sizeof(tMallocAllocHdr));
 
     // Increases the size of the free list
     if ( grow_size % ALLOC_PAGE_SIZE != 0 )
@@ -86,13 +86,24 @@ void *cgc_add_free_list( cgc_size_t request_size )
 void *cgc_malloc( cgc_size_t alloc_size )
 {
     // Allocate
-    if ( alloc_size < 8 )
-        alloc_size = 8;
+    // Minimum size must accommodate the footer when freed
+    if ( alloc_size < sizeof(tMallocAllocFtr) )
+        alloc_size = sizeof(tMallocAllocFtr);
+#if defined(__LP64__) || defined(__x86_64__) || defined(__aarch64__)
+    // On 64-bit, pointers are 8 bytes, so we need 8-byte alignment
+    else if ( alloc_size % 8 != 0 )
+    {
+        alloc_size = (alloc_size >> 3) + 1;
+        alloc_size = (alloc_size << 3);
+    }
+#else
+    // On 32-bit, 4-byte alignment is sufficient
     else if ( alloc_size % 4 != 0 )
     {
         alloc_size = (alloc_size >> 2) + 1;
         alloc_size = (alloc_size << 2);
     }
+#endif
 
     // Scan free list for available objects
     void *pFreeCur;
@@ -108,7 +119,7 @@ void *cgc_malloc( cgc_size_t alloc_size )
         }
 
         tMallocAllocHdr *pFreeCurHeader = ((tMallocAllocHdr *)pFreeCur);
-        tMallocAllocFtr *pFreeCurFooter = ((tMallocAllocFtr *)(pFreeCur + (pFreeCurHeader->alloc_size & ~0x3)-sizeof(tMallocAllocHdr)));
+        tMallocAllocFtr *pFreeCurFooter = ((tMallocAllocFtr *)(pFreeCur + (pFreeCurHeader->alloc_size & ~0x3)-(sizeof(tMallocAllocFtr)-sizeof(tMallocAllocHdr))));
 
         // Check for a suitable allocation
         if ( pFreeCurHeader->alloc_size >= alloc_size )
@@ -135,7 +146,7 @@ void *cgc_malloc( cgc_size_t alloc_size )
 
                 tMallocAllocFtr *pNewChunkFooter = pFreeCurFooter;
 
-                if ( ((void *)pNewChunkHeader + (pNewChunkHeader->alloc_size & ~0x3)-sizeof(tMallocAllocHdr)) != pFreeCurFooter )
+                if ( ((void *)pNewChunkHeader + (pNewChunkHeader->alloc_size & ~0x3)-(sizeof(tMallocAllocFtr)-sizeof(tMallocAllocHdr))) != pFreeCurFooter )
                 {
                     cgc_printf( "Footer != in malloc" );
                     cgc__terminate( -3 );
@@ -213,7 +224,7 @@ void cgc_free( void *pItem )
     // Do we have a neighbor??? IF so perform coalescing
     if ( IS_BIT_SET( pItemHdr->alloc_size, MALLOC_NEXT_FLAG_BIT) )
     {
-        tMallocAllocHdr *pNeighbor = (pItem + (pItemHdr->alloc_size & ~0x3));
+        tMallocAllocHdr *pNeighbor = (tMallocAllocHdr *)(pItem + (pItemHdr->alloc_size & ~0x3));
 
         // Is neighbor inuse? If not -- go ahead and coalesce
         if ( !IS_BIT_SET(pNeighbor->alloc_size, MALLOC_INUSE_FLAG_BIT) )
@@ -234,14 +245,14 @@ void cgc_free( void *pItem )
             {
                 g_memManager.pFreeList = pItemHdr;
 
-                tMallocAllocFtr *pItemFtr = ((tMallocAllocFtr *)((void *)pItemHdr + coalesceSize-sizeof(tMallocAllocHdr)));
+                tMallocAllocFtr *pItemFtr = ((tMallocAllocFtr *)((void *)pItemHdr + coalesceSize-(sizeof(tMallocAllocFtr)-sizeof(tMallocAllocHdr))));
 
                 if ( pItemFtr->pNext )
                     FREE_BLOCK_PREV( pItemFtr->pNext ) = pItemHdr;
             }
             else
             {
-                tMallocAllocFtr *pItemFtr = ((tMallocAllocFtr *)((void *)pItemHdr + coalesceSize-sizeof(tMallocAllocHdr)));
+                tMallocAllocFtr *pItemFtr = ((tMallocAllocFtr *)((void *)pItemHdr + coalesceSize-(sizeof(tMallocAllocFtr)-sizeof(tMallocAllocHdr))));
 
                 // Fix up links
                 if ( pItemFtr->pPrev )
@@ -259,7 +270,7 @@ void cgc_free( void *pItem )
     // No coalesce possible, just link it to the top of the list
     CLEAR_BIT( pItemHdr->alloc_size, MALLOC_INUSE_FLAG_BIT );
 
-    tMallocAllocFtr *pItemFtr = ((tMallocAllocFtr *)((void *)pItemHdr + (pItemHdr->alloc_size & ~0x3)-sizeof(tMallocAllocHdr)));
+    tMallocAllocFtr *pItemFtr = ((tMallocAllocFtr *)((void *)pItemHdr + (pItemHdr->alloc_size & ~0x3)-(sizeof(tMallocAllocFtr)-sizeof(tMallocAllocHdr))));
 
     pItemFtr->pNext = g_memManager.pFreeList;
     pItemFtr->pPrev = NULL;
