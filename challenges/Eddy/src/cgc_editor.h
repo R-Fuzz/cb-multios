@@ -23,6 +23,7 @@
 #ifndef EDITOR_H_
 #define EDITOR_H_
 
+#include "cgc_stdint.h"
 #include "cgc_list.h"
 
 /** Maximum line count we will hold. */
@@ -42,14 +43,14 @@ struct command {
     char command;           /**< The command's letter */
     int start;              /**< The start of the operating region */
     int end;                /**< The end of the operating region */
-    cgc_size_t size;            /**< The size of the command's data */
+    uint32_t size;          /**< The size of the command's data */
     char buf[0];            /**< The command's data */
 } __attribute__((packed));
 
 /** Holds the results of a command when output is produced. */
 struct result {
     int result;             /**< The integer return code from the command */
-    cgc_size_t size;            /**< The size of the output */
+    uint32_t size;          /**< The size of the output */
     unsigned int csum;      /**< A checksum, set by the caller */
     char buf[0];            /**< The output of the command */
 } __attribute__((packed));
