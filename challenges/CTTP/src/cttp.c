@@ -80,8 +80,8 @@ struct cttpreq {
     char hdr[4];
     ver_t version;
     rtype_t type;
-    cgc_size_t psize;
-    cgc_size_t bodysize;
+    uint32_t psize;
+    uint32_t bodysize;
     char *path;
     char *body;
 } typedef cttpreq_t;
@@ -89,13 +89,13 @@ struct cttpreq {
 struct cttpresp {
     char hdr[4];
     rcode_t code;
-    cgc_size_t rsize;
+    uint32_t rsize;
     char *data;
 } typedef cttpresp_t;
 
 struct fileinfo {
-    cgc_size_t psize;
-    cgc_size_t bodysize;
+    uint32_t psize;
+    uint32_t bodysize;
     char *path;
     char *body;
 } typedef fileinfo_t;
@@ -454,17 +454,17 @@ static cttpresp_t *cgc_handle_check(cttpreq_t *req) {
         goto out_free;
     }
 
-    resp->data = cgc_calloc(sizeof(cgc_size_t));
-    
+    resp->data = cgc_calloc(sizeof(uint32_t));
+
     if (!resp->data) {
         debug("Failed to allocate resp data");
         goto out_free;
     }
 
     debug("found file\n");
-    cgc_memcpy(resp->data, &file->bodysize, sizeof(cgc_size_t));
+    cgc_memcpy(resp->data, &file->bodysize, sizeof(uint32_t));
 
-    resp->rsize = sizeof(cgc_size_t);
+    resp->rsize = sizeof(uint32_t);
     resp->code = OK;
 
     LOGINFO(req);
@@ -688,7 +688,7 @@ static cttpresp_t *cgc_handle_v4(cttpreq_t *req) {
  */
 bool cgc_do_challenge() {
     int i;
-    cgc_size_t clen;
+    uint32_t clen;
     char *encoded, *decoded;
     bool res;
     char *challenge = challenges[cgc_randint()%(sizeof(challenges)/sizeof(challenges[0]))];
@@ -747,13 +747,24 @@ bool cgc_do_challenge() {
 bool cgc_handle_request() {
     cttpreq_t req = {0};
     cttpresp_t *resp;
+    // Read only the fixed-size header (20 bytes), not the pointer fields
+    const cgc_size_t header_size = 20; // hdr(4) + version(4) + type(4) + psize(4) + bodysize(4)
+    uint32_t path_wire, body_wire;
 
     dolog = 1;
 
-    if (READDATA(req)) {
+    if (header_size != cgc_recv(STDIN, (char *)&req, header_size)) {
         debug("Failed to recv request.\n");
         cgc__terminate(3);
     }
+
+    // Read the 8-byte pointer placeholders from wire format (32-bit values)
+    RECV(sizeof(path_wire), (char*)&path_wire);
+    RECV(sizeof(body_wire), (char*)&body_wire);
+
+    // Convert 32-bit wire values to pointers (vulnerability in unpatched version)
+    req.path = (char*)(cgc_size_t)path_wire;
+    req.body = (char*)(cgc_size_t)body_wire;
 
 #ifdef PATCHED_1
     //this patch is silly, but means protocol stays same between patched/unpatched
@@ -856,7 +867,8 @@ bool cgc_handle_request() {
             SWAP32(resp->code);
         }
 
-        SSEND(sizeof(*resp)-sizeof(resp->data), (char*)resp);
+        // Send fixed 12-byte header: hdr(4) + code(4) + rsize(4)
+        SSEND(12, (char*)resp);
         SSEND(osize, resp->data);
         
         if (req.path) {
