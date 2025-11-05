@@ -34,7 +34,13 @@ struct chunk {
 } __attribute__((packed));
 
 static cgc_size_t size_class_sizes[] = {
+#if UINTPTR_MAX == 0xFFFFFFFF
+    /* 32-bit: header(4) + list_node(8) + footer(4) = 16 bytes minimum */
     16, 32, 64, 128, 256, 512, 1024, 2048
+#else
+    /* 64-bit: header(8) + list_node(16) + footer(8) = 32 bytes minimum */
+    32, 64, 128, 256, 512, 1024, 2048, 4096
+#endif
 };
 
 #define NUM_SIZE_CLASSES (sizeof(size_class_sizes) / sizeof(cgc_size_t))
