@@ -46,7 +46,7 @@ dupepkt_t *cgc_dupe_next(dupefile_t *f) {
     if (f->caplen > MAX_DUPE_SIZE || f->caplen < 0)
         return NULL;
 
-    pkt = cgc_malloc(sizeof(dupepkt_hdr_t)+4+f->framelen);
+    pkt = cgc_malloc(sizeof(dupepkt_t)+f->framelen);
     if (!pkt)
         return NULL;
 
