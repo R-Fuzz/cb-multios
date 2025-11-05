@@ -31,7 +31,7 @@ typedef long cgc_ssize_t;
 #endif
 
 #ifndef CGC_FLAG_PAGE_ADDRESS
-# define CGC_FLAG_PAGE_ADDRESS 0x4347C000
+# define CGC_FLAG_PAGE_ADDRESS ((void*)0x4347C000)
 #endif
 
 #ifndef offsetof
@@ -64,13 +64,13 @@ typedef struct {
     } while (0)
 
 #define CGC_FD_SET(b, set) \
-    ((set)->_fd_bits[b / CGC__NFDBITS] |= (1 << (b & (CGC__NFDBITS - 1))))
+    ((set)->_fd_bits[b / CGC__NFDBITS] |= (1L << (b & (CGC__NFDBITS - 1))))
 
 #define CGC_FD_CLR(b, set) \
-    ((set)->_fd_bits[b / CGC__NFDBITS] &= ~(1 << (b & (CGC__NFDBITS - 1))))
+    ((set)->_fd_bits[b / CGC__NFDBITS] &= ~(1L << (b & (CGC__NFDBITS - 1))))
 
 #define CGC_FD_ISSET(b, set) \
-    ((set)->_fd_bits[b / CGC__NFDBITS] & (1 << (b & (CGC__NFDBITS - 1))))
+    ((set)->_fd_bits[b / CGC__NFDBITS] & (1L << (b & (CGC__NFDBITS - 1))))
 
 struct cgc_timeval {
     int tv_sec;

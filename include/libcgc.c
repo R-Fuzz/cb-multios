@@ -155,7 +155,20 @@ int cgc_allocate(cgc_size_t length, int is_executable, void **addr) {
   if (is_executable)
     page_perms |= PROT_EXEC;
 
-  void *return_address = mmap(NULL, length, page_perms, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+  int mmap_flags = MAP_ANONYMOUS | MAP_PRIVATE;
+
+  /* On 64-bit systems, some challenges use custom allocators that assume
+   * addresses fit in 32-bit space. Use MAP_32BIT to keep allocations
+   * in the lower 2GB range, which is compatible with 32-bit address
+   * space assumptions.
+   */
+#if defined(__x86_64__) || defined(__aarch64__) || defined(__LP64__)
+  #ifdef MAP_32BIT
+    mmap_flags |= MAP_32BIT;
+  #endif
+#endif
+
+  void *return_address = mmap(NULL, length, page_perms, mmap_flags, -1, 0);
 
   if (return_address == MAP_FAILED) {
     return errno;
