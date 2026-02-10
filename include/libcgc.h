@@ -31,7 +31,7 @@ typedef long cgc_ssize_t;
 #endif
 
 #ifndef CGC_FLAG_PAGE_ADDRESS
-# define CGC_FLAG_PAGE_ADDRESS ((void*)0x4347C000)
+# define CGC_FLAG_PAGE_ADDRESS 0x4347C000
 #endif
 
 #ifndef offsetof
