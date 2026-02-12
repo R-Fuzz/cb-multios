@@ -52,13 +52,13 @@ class PRNG(object):
         if seed is not None:
             assert len(seed) == 48
         else:
-            seed = "zaybxcwdveuftgsh" + "0123456789abcdef" + "\x00" * 16
+            seed = b"zaybxcwdveuftgsh" + b"0123456789abcdef" + b"\x00" * 16
 
         self.V, key, self.DT = [seed[i:i+PRNG.BLOCK_SIZE] for i in range(0, len(seed), PRNG.BLOCK_SIZE)]
-        self.random_data = ''
+        self.random_data = b''
 
-        self.I = "\x00" * PRNG.BLOCK_SIZE
-        self.aes_ctx = AES.new(key)
+        self.I = b"\x00" * PRNG.BLOCK_SIZE
+        self.aes_ctx = AES.new(key, AES.MODE_ECB)
 
     @staticmethod
     def _xor_string(value_1, value_2):
@@ -69,7 +69,7 @@ class PRNG(object):
             AssertionError if value_1 and value_2 are not the same length
         """
         assert len(value_1) == len(value_2)
-        return ''.join(chr(ord(a) ^ ord(b)) for a, b in zip(value_1, value_2))
+        return bytes(a ^ b for a, b in zip(value_1, value_2))
 
     def _get_block(self):
         """
@@ -99,9 +99,10 @@ class PRNG(object):
         # update DT value
         i = PRNG.BLOCK_SIZE - 1
         while i >= 0:
-            out = (ord(self.DT[i]) + 1) % 256
-            self.DT = self.DT[:i] + chr(out) + self.DT[i+1:]
-            if out != 0:
+            dt = bytearray(self.DT)
+            dt[i] = (dt[i] + 1) % 256
+            self.DT = bytes(dt)
+            if dt[i] != 0:
                 break
             i -= 1
 
@@ -121,7 +122,7 @@ class PRNG(object):
         assert isinstance(size, int)
         assert size > 0
 
-        result = ''
+        result = b''
         while len(result) < size:
             need = size - len(result)
             if not len(self.random_data):

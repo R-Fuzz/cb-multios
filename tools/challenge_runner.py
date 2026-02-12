@@ -138,7 +138,7 @@ def chal_watcher(paths, procs, timeout, log):
                 log('Process generated signal (pid: {}, signal: {})'.format(pid, sig))
 
                 # Report the register states
-                reg_str = ' '.join(['{}:{}'.format(reg, val) for reg, val in regs.iteritems()])
+                reg_str = ' '.join(['{}:{}'.format(reg, val) for reg, val in regs.items()])
                 log('register states - {}'.format(reg_str))
 
     # Final cleanup
