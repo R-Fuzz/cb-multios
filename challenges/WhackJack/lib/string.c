@@ -47,16 +47,18 @@ void *cgc_memset( void *ptr, int value, cgc_size_t num )
 	void *ptr_temp = ptr;
 	uint8_t set_value_byte = (uint8_t)value;
 	uint32_t set_value_dword = (set_value_byte << 24) | (set_value_byte << 16) | (set_value_byte << 8) | set_value_byte;
+	uint32_t *ptr32 = (uint32_t*)ptr;
 
 	while ( num >= 4 )
 	{
-		*((uint32_t*)ptr++) = set_value_dword;	
-		num-=4;	
+		*ptr32++ = set_value_dword;
+		num-=4;
 	}
 
+	uint8_t *ptr8 = (uint8_t*)ptr32;
 	while ( num > 0 )
 	{
-		*((uint8_t*)ptr++) = set_value_byte;	
+		*ptr8++ = set_value_byte;
 		num--;
 	}
 

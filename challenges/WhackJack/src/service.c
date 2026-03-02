@@ -35,12 +35,13 @@ THE SOFTWARE.
 
 int main(int cgc_argc, char *cgc_argv[]) {
 
-playerInfoType players[MAX_PLAYERS];	
+playerInfoType players[MAX_PLAYERS];
 char buffer[4];
 int silentMenu;
 int selection;
 unsigned short card_ptr;
 
+	cgc_memset(players, 0, sizeof(players));
 	selection = 99;
 	silentMenu = 0;
 	card_ptr = 0;
