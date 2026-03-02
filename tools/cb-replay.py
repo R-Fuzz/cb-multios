@@ -547,8 +547,8 @@ class Throw(object):
             if self.procs and self.procs[0].poll() is not None:
                 # Process has terminated, return empty if no data
                 break
-            time.sleep(0.1)
-            wait_time += 0.1
+            time.sleep(0.001)
+            wait_time += 0.001
             # Prevent infinite wait (max 10 seconds for data)
             if wait_time > 10:
                 break

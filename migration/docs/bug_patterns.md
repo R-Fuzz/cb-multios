@@ -19,6 +19,7 @@ Extracted from git history, commit diffs, and per-challenge debug reports.
 - **varargs** — custom printf treats `va_list` as `char**` array; breaks on x86-64 register-based ABI
 - **flag-page-addr** — intermediate `intptr_t` variable truncates `CGC_FLAG_PAGE_ADDRESS` on 64-bit
 - **pre-existing** — bug exists in both 32-bit and 64-bit; not a porting issue
+- **test-runner-perf** — `cb-replay.py` per-read overhead (0.1s sleep) causes timeouts on polls with high `MAX_DEPTH` (500+ exchanges)
 
 ---
 
@@ -493,6 +494,57 @@ char *arg = args[i];
 // After (portable)
 cgc_size_t arg = va_arg(ap, cgc_size_t);
 ```
+
+### Modern_Family_Tree
+- **Category**: wire-format
+- **Symptom**: All polls fail; binary reads 8 extra bytes per request on 64-bit
+- **Root Cause**: `Request` struct has `cgc_size_t bytes` field (8 bytes on 64-bit, 4 bytes on 32-bit). Polls send 4-byte length, but binary reads 8 bytes, causing misalignment.
+- **Fix**: Change `cgc_size_t bytes` to `uint32_t bytes` in the `Request` struct
+- **Files**: `challenges/Modern_Family_Tree/src/service.c`
+
+### Neural_House
+- **Category**: wire-format
+- **Symptom**: All polls fail; binary reads 8 extra bytes for sample count on 64-bit
+- **Root Cause**: `numSamples` declared as `cgc_size_t` (8 bytes on 64-bit). Binary calls `cgc_fread(&numSamples, sizeof(cgc_size_t), ...)` reading 8 bytes, but polls send 4-byte count.
+- **Fix**: Change `cgc_size_t numSamples` to `uint32_t numSamples` and update the fread size accordingly
+- **Files**: `challenges/Neural_House/src/service.cc`
+
+### One_Amp
+- **Category**: flag-page-addr + tiny-size
+- **Symptom**: SIGSEGV at startup; heap corruption during operation
+- **Root Causes**:
+  1. `main(int secret_page_i, ...)` cast argc (=1) as the flag page pointer: `(unsigned char *)secret_page_i` dereferences address 1 → crash
+  2. Custom malloc has `TINY_SIZE = 4` but on 64-bit, free-list next pointers are 8 bytes; tiny bins can't hold a pointer → heap corruption
+  3. `cgc_size_to_bin` hardcoded divisor `4` instead of using `TINY_SIZE`
+- **Fix**:
+  1. Use `CGC_FLAG_PAGE_ADDRESS` directly instead of casting argc
+  2. Add `#ifdef __x86_64__ #define TINY_SIZE (8) #else #define TINY_SIZE (4) #endif`
+  3. Fix `cgc_size_to_bin` to use `(n / TINY_SIZE) - 1`
+- **Files**: `challenges/One_Amp/src/service.cc`, `challenges/One_Amp/lib/cgc_malloc_private.h`
+
+### Stock_Exchange_Simulator
+- **Category**: wire-format + test-runner-perf
+- **Symptom**: Tests timeout; binary sends/receives wrong number of bytes per BUY/SELL packet
+- **Root Causes**:
+  1. `packet_t` struct has `void *op_data` (8 bytes on 64-bit, 4 bytes on 32-bit). Polls send 24-byte packets (4-byte op_data). With `void*`, binary reads 32 bytes for the header.
+  2. `sizeof(void *)` used in `cgc_get_data_len()` and `cgc_gen_order_fill_msg()` to compute payload sizes, producing wrong sizes on 64-bit.
+  3. `cb-replay.py` uses `time.sleep(0.1)` per read while waiting for data → ~100ms overhead per exchange. Polls with `MAX_DEPTH=500` have 501 exchanges per file → 50 seconds, exceeding the 10-15 second timeout.
+- **Fix**:
+  1. Change `void *op_data` to `uint32_t op_data` in `packet_t`
+  2. Replace `sizeof(void *)` with `sizeof(uint32_t)` in payload size calculations
+  3. Change `time.sleep(0.1)` to `time.sleep(0.001)` in `read_from_proc()` in `tools/cb-replay.py`
+- **Files**: `challenges/Stock_Exchange_Simulator/src/cgc_option.h`, `src/service.c`, `src/option.c`, `tools/cb-replay.py`
+
+### TVS
+- **Category**: wire-format + custom-malloc (pointer-as-id)
+- **Symptom**: All polls fail; locker IDs (raw pointer values) differ between 32-bit and 64-bit
+- **Root Causes**:
+  1. `locker_t` has `void *data` (8 bytes on 64-bit) → `sizeof(locker_t)` = 16 on 64-bit vs 8 on 32-bit. Polls encode raw pointer addresses as 32-bit IDs expecting specific address values.
+  2. Even with `void*` fixed to `uint32_t`, the vault is `malloc()`'d at a different heap address on 64-bit (due to HEADER_PADDING = 48 vs 24). Polls hardcode `contents[0]` address as `0xB7FC0024`.
+- **Fix**:
+  1. Change `void *data` to `uint32_t data` in `locker_t`; fix cast-to/from to use `(uint32_t)(uintptr_t)` and `(void *)(uintptr_t)`
+  2. On 64-bit, use `mmap(0xB7FC0000, 8192, ..., MAP_FIXED_NOREPLACE)` to place `the_vault` at a fixed address that yields `contents[0] == 0xB7FC0024` (same as 32-bit heap layout)
+- **Files**: `challenges/TVS/src/vault.c`, `challenges/TVS/lib/cgc_malloc.h`
 
 ### middleware_handshake — `ebcbfd3c`
 - **Category**: cgc-prefix-rename (tentative definition shadowing)
