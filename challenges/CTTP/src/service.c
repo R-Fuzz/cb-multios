@@ -44,10 +44,10 @@ void cgc_initialize(char *s, cgc_size_t np) {
 int main(int cgc_argc, char *cgc_argv[]) {
     char stack[PAGE_SIZE*16];
 
-    int fd;
+    int fd = 0;
     cgc_fd_set readfds;
     int numready = 0;
-    struct cgc_timeval timeout = {2, 0};
+    struct cgc_timeval timeout = {0, 100000};
     cgc_size_t i, res, recvd = 0;
 
     //lets be nice and make some backup copies of the flag page :)
