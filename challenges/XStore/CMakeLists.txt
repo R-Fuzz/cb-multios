@@ -1,5 +1,6 @@
 set( SERVICE_ID "00087" )
 set( AUTHOR_ID "KPRCA" )
 add_compile_options( -O3 -g )
+add_compile_options( "-DPRINTF_CHAR=38" )
 set( VULN_COUNT "1" )
 buildCB()

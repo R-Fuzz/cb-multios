@@ -548,8 +548,11 @@ class Throw(object):
             # has finished reading all pipe data before giving up
             if self.procs and self.procs[0].poll() is not None:
                 if self.buf_thread is None or not self.buf_thread.is_alive():
-                    # Process terminated and pipe fully drained, no more data
-                    break
+                    # Re-check pipe_raw after thread is done to avoid a race
+                    # condition where the thread appended data just before exiting
+                    if len(self.pipe_raw) == 0:
+                        # Process terminated and pipe fully drained, no more data
+                        break
             time.sleep(0)
             wait_time += 0.0001
             # Prevent infinite wait (max 10 seconds for data)
