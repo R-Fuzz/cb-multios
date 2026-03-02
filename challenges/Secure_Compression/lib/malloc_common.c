@@ -380,6 +380,16 @@ void *cgc_malloc_alloc(malloc_t *heap, cgc_size_t n)
 
     n = ALIGNED(n, 4);
 
+#ifdef __x86_64__
+    /* On 64-bit, tiny_alloc cannot hold 8-byte pointers in 4-byte blocks.
+     * Route all small allocations through small_alloc instead. */
+    if (n < SMALL_SIZE)
+        ptr = small_alloc(heap, n);
+    else if (n < LARGE_SIZE)
+        ptr = small_alloc(heap, n);
+    else
+        ptr = large_alloc(heap, n);
+#else
     if (n < TINY_SIZE)
         ptr = tiny_alloc(heap, TINY_SIZE);
     else if (n < SMALL_SIZE)
@@ -388,6 +398,7 @@ void *cgc_malloc_alloc(malloc_t *heap, cgc_size_t n)
         ptr = small_alloc(heap, n);
     else
         ptr = large_alloc(heap, n);
+#endif
 
     return ptr;
 }

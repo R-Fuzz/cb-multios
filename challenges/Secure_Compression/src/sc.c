@@ -24,6 +24,7 @@
 #include "cgc_stdio.h"
 #include "cgc_stdlib.h"
 #include "cgc_string.h"
+#include "cgc_stdint.h"
 
 #include "cgc_sc.h"
 
@@ -342,7 +343,7 @@ unsigned char* cgc_sc_mtf(sc_obj_t *sc, int op, cgc_size_t *outlen)
         // Do MTF
         unsigned char *out = cgc_malloc(sc->data_len);
         unsigned char *out_c = cgc_malloc(sc->data_len * 2 + 4);
-        *(cgc_size_t *)out_c = sc->data_len;
+        *(uint32_t *)out_c = (uint32_t)sc->data_len;
         cgc_memset(out, 0, sc->data_len);
 
         for (i = 0; i < 32; ++i)
@@ -395,7 +396,7 @@ unsigned char* cgc_sc_mtf(sc_obj_t *sc, int op, cgc_size_t *outlen)
 #else
         unsigned char out[MAX_DATA_SIZE/2];
 #endif
-        cgc_size_t sz = *(cgc_size_t *)sc->data;
+        uint32_t sz = *(uint32_t *)sc->data;
         if (sz > MAX_DATA_SIZE)
             return NULL;
         unsigned char *out_d = cgc_malloc(sz);
