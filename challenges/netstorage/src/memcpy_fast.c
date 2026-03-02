@@ -25,7 +25,11 @@
 #include "cgc_stdlib.h"
 #include "cgc_string.h"
 
+#ifdef __x86_64__
+typedef unsigned long intptr_t;
+#else
 typedef unsigned int intptr_t;
+#endif
 typedef unsigned int uint128_t __attribute__((__vector_size__(16)));
 
 void *cgc_memcpy_fast(void *dst, void *src, cgc_size_t length)

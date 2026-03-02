@@ -29,9 +29,17 @@
 #include "cgc_stdint.h"
 
 #define NUM_FREE_LISTS 32
-#define HEADER_PADDING 32
+#ifdef __x86_64__
+#define HEADER_PADDING 48  // 64-bit: sizeof(struct blk_t) = 48
+#else
+#define HEADER_PADDING 32  // 32-bit: sizeof(struct blk_t) = 32
+#endif
 #define NEW_CHUNK_SIZE 262144
+#ifdef __x86_64__
+#define ALIGNMENT 16  // 64-bit: ensure 16-byte alignment for SSE movdqa
+#else
 #define ALIGNMENT 8
+#endif
 
 extern struct blk_t *cgc_free_lists[NUM_FREE_LISTS];
 extern cgc_size_t size_class_limits[NUM_FREE_LISTS];
