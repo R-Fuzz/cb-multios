@@ -533,8 +533,9 @@ int main(int cgc_argc, char *cgc_argv[]) {
 #ifdef PATCHED_1
         Response r = {0};
 #else
-        Response r;
-#endif        
+        /* On 64-bit, uninitialized stack differs from 32-bit; zero-init for portability */
+        Response r = {0};
+#endif
 
         RECV(&s, sizeof(Session) - 2*sizeof(char *));
 
