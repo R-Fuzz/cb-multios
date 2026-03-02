@@ -162,7 +162,7 @@ static void *cgc_ht_str_key_ptr(void *pair) {
  * @return 		pointer to value
  */
 static void *cgc_ht_int_value_ptr(ht_t *h, void *pair) {
-	return pair + sizeof(unsigned int);
+	return pair + sizeof(void *);
 }
 
 /**
