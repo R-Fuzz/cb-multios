@@ -550,8 +550,8 @@ class Throw(object):
                 if self.buf_thread is None or not self.buf_thread.is_alive():
                     # Process terminated and pipe fully drained, no more data
                     break
-            time.sleep(0.001)
-            wait_time += 0.001
+            time.sleep(0)
+            wait_time += 0.0001
             # Prevent infinite wait (max 10 seconds for data)
             if wait_time > 10:
                 break

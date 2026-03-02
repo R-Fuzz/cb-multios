@@ -183,7 +183,12 @@ def get_core_dump_regs(path, pid, log):
 
     # Read the registers
     # Python 3: communicate() returns bytes, need to decode
-    stdout, stderr = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE).communicate()
+    try:
+        proc = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE)
+    except FileNotFoundError:
+        log('Debugger not found, cannot read core dump registers')
+        return None
+    stdout, stderr = proc.communicate()
     stdout = stdout.decode('utf-8', errors='replace') if isinstance(stdout, bytes) else stdout
     stderr = stderr.decode('utf-8', errors='replace') if isinstance(stderr, bytes) else stderr
     dbg_out = '\n'.join([stdout, stderr])
