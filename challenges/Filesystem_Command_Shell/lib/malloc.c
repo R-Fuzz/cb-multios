@@ -84,8 +84,8 @@ void cgc_add_freelist_block( cgc_size_t length )
 
 	/// Round to the nearest page
 
-	/// Account for the 4 byte length field
-	length += 4;
+	/// Account for the length field (cgc_size_t, 4 bytes on 32-bit, 8 bytes on 64-bit)
+	length += sizeof(cgc_size_t);
 
 	length = (length + 4095 ) & 0xfffff000;
 
@@ -96,7 +96,7 @@ void cgc_add_freelist_block( cgc_size_t length )
 
 	cgc_bzero( block, length );
 
-	block->length = length-4;
+	block->length = length-sizeof(cgc_size_t);
 	
 	if ( cgc_lookaside[0] == NULL ) {
 		cgc_lookaside[0] = block;
@@ -113,7 +113,7 @@ void cgc_free( void *block )
 	pmeta nb = NULL;
 
 	if ( block ) {
-		nb = (pmeta) (( (char*)block) - 4);
+		nb = (pmeta) (( (char*)block) - sizeof(cgc_size_t));
 		cgc_link(nb);
 	}
 
@@ -141,7 +141,7 @@ void cgc_init_freelist( void )
 	zero_block->next = base_block;
 	zero_block->prev = NULL;
 
-	base_block->length = 4096 - sizeof(meta) - 4;
+	base_block->length = 4096 - sizeof(meta) - sizeof(cgc_size_t);
 	base_block->prev = zero_block;
 	base_block->next = NULL;
 
@@ -203,13 +203,13 @@ void *cgc_freelist_alloc( cgc_size_t length )
 		///	That means sizeof(meta) prev and next total 8 bytes
 		///	bytes on the lookaside list
 		if ( walker->length - length < sizeof(meta) ) {
-			/// Skip the 4 byte length
-			return ((char*)walker) + 4;
+			/// Skip the length field (cgc_size_t)
+			return ((char*)walker) + sizeof(cgc_size_t);
 		}
 
 		/// Break the chunk off
-		newone = (pmeta) ( ((char*)walker) + 4 + length );
-		newone->length = walker->length - (length+4);
+		newone = (pmeta) ( ((char*)walker) + sizeof(cgc_size_t) + length );
+		newone->length = walker->length - (length+sizeof(cgc_size_t));
 
 		//cgc_printf("Broke $d into $d and $d\n", walker->length, length, newone->length);
 		walker->length = length;
@@ -217,7 +217,7 @@ void *cgc_freelist_alloc( cgc_size_t length )
 		cgc_link(newone);
 
 		//cgc_printf("Returning size: $d\n", walker->length);
-		return ((char*)walker) + 4;
+		return ((char*)walker) + sizeof(cgc_size_t);
 	}
 
 	return NULL;
@@ -274,7 +274,7 @@ void *cgc_malloc( cgc_size_t length )
 		outb = cgc_lookaside[ bucket ];
 		cgc_lookaside[bucket] = outb->next;
 
-		return ( (char*)outb ) + 4;
+		return ( (char*)outb ) + sizeof(cgc_size_t);
 	}
 
 	return NULL;
