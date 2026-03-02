@@ -27,7 +27,13 @@
 #include "cgc_stdint.h"
 
 #define RUN_SIZE (1024 * 1024)
+/* On 64-bit, a tiny free block must hold a pointer (8 bytes).
+ * Using TINY_SIZE=4 would cause the free-list pointer to overflow the block. */
+#ifdef __x86_64__
+#define TINY_SIZE (8)
+#else
 #define TINY_SIZE (4)
+#endif
 #define SMALL_SIZE (16)
 #define LARGE_SIZE (128 * 1024)
 #define MAX_SIZE ((unsigned int)INT_MAX)
@@ -98,7 +104,7 @@ cgc_size_t cgc_malloc_size(malloc_t *heap, void *ptr);
 static inline int cgc_size_to_bin(cgc_size_t n)
 {
     if (n < SMALL_SIZE)
-        return (n / 4) - 1;
+        return (n / TINY_SIZE) - 1;
     else if (n <= 512)
         return NUM_TINY_BINS + (n / 16) - 1;
     else if (n <= 4096 + 512)

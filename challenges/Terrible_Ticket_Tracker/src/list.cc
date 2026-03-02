@@ -58,7 +58,7 @@ Support* List::Remove(uint32_t idx)
   Support *support = data[idx];
   if (idx < size - 1)
   {
-    cgc_memmove(&(data[idx]), &(data[idx + 1]), (size - 1 - idx) * sizeof(idx));
+    cgc_memmove(&(data[idx]), &(data[idx + 1]), (size - 1 - idx) * sizeof(data[0]));
   }
 
   data[size - 1] = nullptr;

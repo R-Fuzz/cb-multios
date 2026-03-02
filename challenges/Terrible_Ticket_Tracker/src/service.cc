@@ -418,8 +418,8 @@ void run_server(FILE* in, FILE* out, unsigned char* secrets)
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
+    secret_page_i = (int)(intptr_t)CGC_FLAG_PAGE_ADDRESS;
     unsigned char *secret_page = (unsigned char *)secret_page_i;
     cgc_fxlat(cgc_stdin, "EREH_EULAV_MODNAR");
     cgc_fxlat(cgc_stdout, "EREH_EULAV_MODNAR");
