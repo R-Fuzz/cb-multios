@@ -50,7 +50,7 @@ static char ERR[4] = {0};
 typedef struct request Request;
 struct request {
     char cmd[4];
-    cgc_size_t bytes;
+    uint32_t bytes;
 };
 
 
