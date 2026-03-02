@@ -45,7 +45,9 @@ void put(void *v);
 void put(int v);
 void put(long v);
 
-void call_inits(void);
+void __attribute__((constructor(101))) call_inits(void) {
+	cgc_transmit_all(1, "ctors called...\n", 16);
+}
 void terminate(int e) {cgc__terminate(e);}
 
 int first = 1;
