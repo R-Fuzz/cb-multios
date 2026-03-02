@@ -374,7 +374,7 @@ backlogItemType *sprintBIPtr;
 
 	cgc_free(SBIPtr->description);
 
-	SBIPtr->description = malloc(cgc_strlen(&message->desc)+1);
+	SBIPtr->description = cgc_malloc(cgc_strlen(&message->desc)+1);
 
 	if (SBIPtr->description == 0)
 		cgc__terminate(-1);
