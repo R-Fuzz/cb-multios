@@ -23,10 +23,25 @@ Extracted from git history, commit diffs, and per-challenge debug reports.
 - **sse-alignment** — compiler generates `movdqa` (aligned SSE load) for heap-allocated structs; requires ALIGNMENT=16 in custom malloc
 - **stale-pointer** — pointer not updated after realloc; manifests as use-after-free with garbage data
 - **test-runner-perf** — `cb-replay.py` per-read overhead (0.1s sleep) causes timeouts on polls with high `MAX_DEPTH` (500+ exchanges)
+- **buffered-pipe-deadlock** — `cb-replay.py` `buffer_pipe_data` used `BufferedReader.read(N)` which blocks until N bytes available; challenges that write < N bytes then wait on stdin deadlock the test runner
+- **uninit-loop-cond** — challenge loop condition uses uninitialized stack variable; 32-bit works by accident (non-zero garbage on stack), 64-bit fails because `cgc_clear_stack` zeros 128KB before `main()`
+- **malloc-header-offset** — custom malloc uses `uint32_t length` header but computes offsets as `+sizeof(cgc_size_t)` (8 on 64-bit), causing wrong free/alloc pointer arithmetic
+- **malloc-split-boundary** — on 64-bit, doubled pointer size causes the remainder block header to land exactly at the off-by-one read location; a `sizeof(void*)` guard zone between user data and next block header prevents spurious non-NULL reads
+- **poll-no-seed** — pre-generated poll XMLs check PRNG-derived pixel values without embedding a seed; cannot pass with random seeds; fix by regenerating polls with `--store_seed`
 
 ---
 
 ## Fixes Extracted from Git History
+
+### 3D_Image_Toolkit — (this session)
+- **Category**: custom-malloc + malloc-header-offset + malloc-split-boundary + uninit-loop-cond + buffered-pipe-deadlock + poll-no-seed
+- **Symptom**: SIGSEGV (signal 11) after printing welcome message on 64-bit; cb-replay.py reports "write failed. wrote 0 of 1 bytes"
+- **Root Cause 1 (malloc-header-offset)**: `lib/malloc.c` `meta` struct used `cgc_size_t length` (8 bytes on 64-bit) but all offset arithmetic used hardcoded `+4`/`-4` (sizeof uint32_t). Fix: change `cgc_size_t length` to `uint32_t length` throughout.
+- **Root Cause 2 (malloc-split-boundary)**: On 64-bit, `px_list` (409 × 8 = 3272 bytes) is carved from a 4068-byte free block. The remainder block header lands at `px_list + 3276`, and `cgc_Push`'s off-by-one loop writes to `px_list[409]` (at `px_list + 3272`) which hit the remainder's `length` field (784, non-NULL) causing heap corruption. Fix: add `sizeof(void*)` = 8 byte guard zone of zeroed bytes between user allocation and next block header, so the off-by-one write falls in zeroed guard space.
+- **Root Cause 3 (uninit-loop-cond)**: `cgc_menu()` has `while(choice)` with uninitialized `char choice`. In 32-bit, stack garbage (non-zero) makes the loop run. In 64-bit, `cgc_clear_stack` (added to simulate DECREE zero-initialized stack) zeros 128KB before `main()`, so `choice = 0` and the loop never runs. Fix: initialize `choice = 1` in `src/main.c`.
+- **Root Cause 4 (buffered-pipe-deadlock)**: `cb-replay.py` `buffer_pipe_data` used `pipe.read(4096)` (Python `BufferedReader`) which blocks until 4096 bytes available. Challenges that write < 4096 bytes then wait for input deadlock the test runner. Fix: use `pipe.raw.read(4096)` (`FileIO`) which returns partial reads immediately.
+- **Root Cause 5 (poll-no-seed)**: Polls 7 and 8 check PRNG-derived pixel values (from magic page seed) without embedding a `<seed>` tag in the XML. Cannot pass with random seeds. Fix: regenerate polls using `generate-polls --store_seed` with the 64-bit SO.
+- **Files**: `challenges/3D_Image_Toolkit/lib/malloc.c`, `challenges/3D_Image_Toolkit/src/main.c`, `tools/cb-replay.py`, `polls/3D_Image_Toolkit/poller/for-release/GEN_00000_0000*.xml`, `challenges/3D_Image_Toolkit/poller/for-release/machine.py`
 
 ### ASCII_Content_Server — `f1d92896`
 - **Category**: custom-malloc
@@ -748,3 +763,27 @@ done
   2. Add `buf[i] = '\0';` after extraction loop
   3. Change `cgc_read_n()` to greedy bulk reads: request `remaining` bytes, advance by `rx`, loop until done
 - **Files**: `challenges/PKK_Steganography/src/main.c`
+
+### RAM_based_filesystem — `c66c73db`
+- **Category**: struct-alloc (pointer-size array overflow)
+- **Symptom**: SIGSEGV crashes on 64-bit; 4/100 polls fail
+- **Root Cause**: Two hardcoded constants assumed 4-byte pointers:
+  1. `MAX_DIR_INODES 128` — `directory` struct: `inode *inodes[128]`. On 64-bit, 128 * 8 = 1024 bytes but the struct is stored in a 512-byte `block`. Writes beyond the block corrupted adjacent memory.
+  2. `INODES_PER_PAGE 16` — inode page: 16 * sizeof(inode) = 16 * 296 = 4736 bytes exceeded the 4096-byte page size.
+- **Fix**: Replace hardcoded constants with sizeof()-based expressions:
+  - `#define INODES_PER_PAGE (PAGE_SIZE / sizeof(inode))` → 13 on 64-bit (correct), still 16 on 32-bit
+  - `#define MAX_DIR_INODES (DATA_BLOCK_SIZE / sizeof(inode *))` → 64 on 64-bit (correct), still 128 on 32-bit
+- **Files**: `challenges/RAM_based_filesystem/src/cgc_fs.h`
+
+### cb-replay.py pipe reading race condition — `ca44f239`
+- **Category**: test-runner-perf (pipe drain race)
+- **Symptom**: Intermittent `recv failed` for challenges producing large binary outputs (e.g., PKK_Steganography 63002-byte PKK image). ~10-46% failure rate on 64-bit, ~11% on 32-bit. Passes with --timeout 30 but fails with --timeout 15.
+- **Root Cause**: Two issues in `buffer_pipe_data` / `read_from_proc`:
+  1. `buffer_pipe_data` used `pipe.read(1)` — one byte per iteration. For a 63002-byte output, 63002 individual reads from a background thread could not keep pace with the reader. `read_from_proc` exhausted `pipe_raw` before data arrived, returning empty string and triggering `recv failed`.
+  2. `read_from_proc` broke out of its wait loop as soon as `procs[0].poll() is not None` (process terminated) even if the buffer thread was still draining pipe data. This created a race: process exits → main thread sees process dead → returns empty → "recv failed", even though buffer thread had all data.
+- **Fix**:
+  1. Changed `pipe.read(1)` to `pipe.raw.read(4096)` — use FileIO for larger partial reads without blocking for a full N bytes.
+  2. Track buffer thread as `self.buf_thread`; in `read_from_proc`, only break early when both process is dead AND `self.buf_thread.is_alive()` is False (pipe fully drained).
+  3. Fixed `buf_thread.join()` → `self.buf_thread.join()` at cleanup.
+- **Files**: `tools/cb-replay.py`
+- **Note**: SCUBA_Dive_Logging and Multicast_Chat_Server also showed intermittent failures for the same reason, now fixed by this infrastructure fix.

@@ -22,7 +22,7 @@ EXIT            = '\x0b'
 
 COORDS          = [ ('x',0) , ('y',1) , ('z',2) ]
 
-MAX_PIXELS      = 4096/10
+MAX_PIXELS      = 4096//10
 
 M_PI            = 3.14159265358979323846
 
@@ -35,14 +35,19 @@ class Poller(Actions):
         self.delay(50)
         self.read(delim='\n', expect='3D Coordinates (3DC) Image File Format Tools\n')
         self.file_data = []
-        self.compressed = ""
+        self.compressed = b""
         self.compressed_colors = []
         self.last_shown = 0
         self.decompress_flag = 0
         self.count = 0
 
         # setup ctypes for prng functions
-        self.dll = CDLL('../../build/challenges/3D_Image_Toolkit/libCROMU_00078.so')
+        import os as _os
+        _so = _os.environ.get('CROMO_00078_SO',
+              _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
+                            '..', '..', '..', '..', 'build64', 'challenges',
+                            '3D_Image_Toolkit', 'libCROMU_00078.so'))
+        self.dll = CDLL(_so)
         self.seed_prng = self.dll.cgc_seed_prng
         self.seed_prng.argtypes = [ c_uint ]
         self.seed_prng.restype = None
@@ -77,7 +82,7 @@ class Poller(Actions):
         self.seed_prng(c_uint(unpack('<L', self.magic_page[0:4])[0]))
 
         x = 0
-        for _ in xrange(4096/10):
+        for _ in range(4096//10):
             # z, r, x, a, b, y, g
             t = {}
             t['x'] = c_short(self.prng()).value
@@ -128,7 +133,7 @@ class Poller(Actions):
         self.file_data = []
         x = 0
 
-        data_to_send = ""
+        data_to_send = b""
 
         while (x < 4090):
             t = {}
@@ -312,7 +317,7 @@ class Poller(Actions):
         max_idx = 8 if (type == 0 or type == 2) else 4
         close_idx = max_idx
 
-        for x in xrange(max_idx):
+        for x in range(max_idx):
             if (type == 0 or type == 2):
                 temp_diff = abs(val - self.red_blue[x])
             else:
@@ -364,7 +369,7 @@ class Poller(Actions):
         for t in self.file_data:
             x += 6
 
-            new_color = unpack("<B", self.compressed[x])[0]
+            new_color = self.compressed[x] if isinstance(self.compressed[x], int) else unpack("<B", self.compressed[x])[0]
             new_red = self.red_blue[(int('11100000',2) & new_color) >> 5] #& 0xff
             new_green = self.green[(int('00011000', 2) & new_color) >> 3] #& 0xff
             new_blue = self.red_blue[(int('00000111', 2) & new_color) >> 0] #& 0xff

@@ -53,7 +53,7 @@ enum {
 } coords;
 
 void cgc_menu() {
-  char choice;
+  char choice = 1;
   char coord;
   uint16_t val;
 

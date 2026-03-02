@@ -25,12 +25,13 @@ THE SOFTWARE.
 */
 
 #include "cgc_malloc.h"
+#include "cgc_stdint.h"
 #include "cgc_stdlib.h"
 #include "cgc_stdio.h"
 #include "cgc_string.h"
 
 typedef struct meta {
-	cgc_size_t length;
+	uint32_t length;
 	struct meta *next;
 	struct meta *prev;
 } meta, *pmeta;
@@ -85,8 +86,8 @@ void cgc_add_freelist_block( cgc_size_t length )
 
 	/// Round to the nearest page
 
-	/// Account for the 4 byte length field
-	length += 4;
+	/// Account for the length field
+	length += sizeof(uint32_t);
 
 	length = (length + 4095 ) & 0xfffff000;
 
@@ -97,7 +98,7 @@ void cgc_add_freelist_block( cgc_size_t length )
 
 	cgc_bzero( block, length );
 
-	block->length = length-4;
+	block->length = length-sizeof(uint32_t);
 	
 	if ( lookaside[0] == NULL ) {
 		lookaside[0] = block;
@@ -114,7 +115,7 @@ void cgc_free( void *block )
 	pmeta nb = NULL;
 
 	if ( block ) {
-		nb = (pmeta) (( (char*)block) - 4);
+		nb = (pmeta) (( (char*)block) - sizeof(uint32_t));
 		cgc_link(nb);
 	}
 
@@ -142,7 +143,7 @@ void cgc_init_freelist( void )
 	zero_block->next = base_block;
 	zero_block->prev = NULL;
 
-	base_block->length = 4096 - sizeof(meta) - 4;
+	base_block->length = 4096 - sizeof(meta) - sizeof(uint32_t);
 	base_block->prev = zero_block;
 	base_block->next = NULL;
 
@@ -203,14 +204,17 @@ void *cgc_freelist_alloc( cgc_size_t length )
 		///	least an 8 byte block then return the whole thing
 		///	That means sizeof(meta) prev and next total 8 bytes
 		///	bytes on the lookaside list
-		if ( walker->length - length < sizeof(meta) ) {
-			/// Skip the 4 byte length
-			return ((char*)walker) + 4;
+		if ( walker->length - length < sizeof(meta) + sizeof(void*) ) {
+			/// Skip the length field
+			return ((char*)walker) + sizeof(uint32_t);
 		}
 
-		/// Break the chunk off
-		newone = (pmeta) ( ((char*)walker) + 4 + length );
-		newone->length = walker->length - (length+4);
+		/// Break the chunk off, leaving sizeof(void*) guard bytes
+		/// between the user allocation and the next block header.
+		/// On 64-bit, this prevents spurious non-NULL pointer reads
+		/// at the allocation boundary due to pointer size doubling.
+		newone = (pmeta) ( ((char*)walker) + sizeof(uint32_t) + length + sizeof(void*) );
+		newone->length = walker->length - (length + sizeof(uint32_t) + sizeof(void*));
 
 		//cgc_printf("Broke $d into $d and $d\n", walker->length, length, newone->length);
 		walker->length = length;
@@ -218,7 +222,7 @@ void *cgc_freelist_alloc( cgc_size_t length )
 		cgc_link(newone);
 
 		//cgc_printf("Returning size: $d\n", walker->length);
-		return ((char*)walker) + 4;
+		return ((char*)walker) + sizeof(uint32_t);
 	}
 
 	return NULL;
@@ -275,7 +279,7 @@ void *cgc_malloc( cgc_size_t length )
 		outb = lookaside[ bucket ];
 		lookaside[bucket] = outb->next;
 
-		return ( (char*)outb ) + 4;
+		return ( (char*)outb ) + sizeof(uint32_t);
 	}
 
 	return NULL;
