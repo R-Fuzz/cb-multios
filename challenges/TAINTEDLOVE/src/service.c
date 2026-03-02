@@ -91,9 +91,9 @@ int cgc_entanglement_razzmatazz(void) {
 #else
     len = sz_alloc_align;
 #endif
-    cgc_size_t gate =   rx_buf[GATE_OFF+0] <<  0 | 
-                    rx_buf[GATE_OFF+1] <<  8 | 
-                    rx_buf[GATE_OFF+2] << 16 | 
+    unsigned int gate =   rx_buf[GATE_OFF+0] <<  0 |
+                    rx_buf[GATE_OFF+1] <<  8 |
+                    rx_buf[GATE_OFF+2] << 16 |
                     rx_buf[GATE_OFF+3] << 24;
 
     cgc_size_t i = 0;
@@ -215,9 +215,9 @@ int cgc_causality_poppycock(void) {
 #endif 
     }
 
-    // We construct output from vuln_buf, so they can't just throw out / ignore 
+    // We construct output from vuln_buf, so they can't just throw out / ignore
     // all these operations.
-    cgc_size_t output = 0;
+    unsigned int output = 0;
     cgc_size_t i = 0;
     for (i = 0; i < SZ_VULN_BUF-3; i+=4) {
 
@@ -287,11 +287,13 @@ int cgc_heisenberg_hooey(void) {
         rx_buf[1+rx_buf[XOR_CONST_OFF_PTR]] ^ 
         rx_buf[1+rx_buf[XOR_CONST_OFF_PTR]];
 
-    // XOR, Medium-ish: the constified memory is symbolic, but it's not 
-    // immediately obvious that the two memory accesses are aliased.  
-    rx_buf[1+rx_buf[XOR_CONST_OFF_PTR*2]] = 
-        rx_buf[1+rx_buf[XOR_CONST_OFF_PTR*2]] ^ 
-        rx_buf[1+rx_buf[(XOR_CONST_OFF_PTR*2)+0xFFFFFFFF+1]];
+    // XOR, Medium-ish: the constified memory is symbolic, but it's not
+    // immediately obvious that the two memory accesses are aliased.
+    // NOTE: On 32-bit, (XOR_CONST_OFF_PTR*2)+0xFFFFFFFF+1 wraps to XOR_CONST_OFF_PTR*2
+    // (aliased). Use unsigned int cast to ensure 32-bit wrapping on 64-bit as well.
+    rx_buf[1+rx_buf[XOR_CONST_OFF_PTR*2]] =
+        rx_buf[1+rx_buf[XOR_CONST_OFF_PTR*2]] ^
+        rx_buf[1+rx_buf[(unsigned int)((XOR_CONST_OFF_PTR*2)+0xFFFFFFFF+1)]];
 
     ///////////////// FLOAT
 
@@ -406,8 +408,8 @@ int cgc_heisenberg_hooey(void) {
                     rx_buf[BE_OFF]            <<  8 | // BE (even)
                     rx_buf[SYSCALL_PROP_OFF]  << 16 | // AD (odd)
                     rx_buf[FLOAT_PROP_OFF]    << 24;  // DE (even)
-                   
-    cgc_size_t output = 0;
+
+    unsigned int output = 0;
     // The 2 bytes are the easily-reasoned-about ones.
     if ((GATE_MAGIC & 0x0000FFFF) == (gate & 0x0000FFFF)) {
 
@@ -475,7 +477,7 @@ int cgc_relativistic_jabberwock(void) {
     
     cgc_size_t GATE_MAGIC = 0xd00000d5;
 
-    cgc_size_t output;
+    unsigned int output;
 
 #ifdef DEBUG
     fprintf(cgc_stderr, "[D] relativistic_jabberwock() | init\n");
@@ -520,7 +522,7 @@ int cgc_relativistic_jabberwock(void) {
     // forcing constification in another.
 
     // This forces reasoning about the propagation piece.
-    cgc_size_t gate =   rx_buf[rx_buf[SYM_PROP_PTR_1]+0] <<  0 |
+    unsigned int gate =   rx_buf[rx_buf[SYM_PROP_PTR_1]+0] <<  0 |
                     rx_buf[rx_buf[SYM_PROP_PTR_1]+1] <<  8 |
                     rx_buf[rx_buf[SYM_PROP_PTR_1]+2] << 16 |
                     rx_buf[rx_buf[SYM_PROP_PTR_1]+3] << 24;

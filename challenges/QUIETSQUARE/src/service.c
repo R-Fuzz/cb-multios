@@ -230,10 +230,13 @@ bail_defrag:
 }
 
 void cgc_exercise_stack(void){
-	// We need to force mapping of the entirety (or most) of the stack space
-	// because the kernel is lazy and near the bottom of the stack probably 
-	// isn't accessible without this.
+	// On CGC/DECREE, this forced mapping of the stack pages.
+	// On Linux, the stack grows automatically; skip the large allocation
+	// to avoid stack overflow.
+#if !defined(LINUX) && !defined(__x86_64__)
 	unsigned char bogus[STACK_SZ-0x1000] = { 0 };
+	(void)bogus;
+#endif
 }
 
 
@@ -251,11 +254,11 @@ int main(int cgc_argc, char *cgc_argv[]) {
 	cgc_exercise_stack();
 
 	// From the README, we store a pointer to the OTP at a low stack address.
-	void *ppotp = (void *)(STACK_LIMIT + 0x10000);
+	// On Linux, use the global cgc_ppotp instead of the CGC-specific stack address.
+	void *ppotp = &cgc_ppotp;
 	unsigned char *potp = cgc_otp;
 	((void **)ppotp)[0] = potp;
-	// Henceforth, when we reference OTP, we do so via a double-dereference 
-	// that passes through STACK_LIMIT + 0x10000.
+	// Henceforth, when we reference OTP, we do so via a double-dereference.
 
     // Main loop.
     while(1) {

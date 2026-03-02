@@ -20,6 +20,24 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) < (b)) ? (b) : (a))
 
+/* Map a Linux errno value to a CGC errno value.
+ * CGC/DECREE defined its own errno values that differ from Linux:
+ *   CGC_EBADF=1, CGC_EFAULT=2, CGC_EINVAL=3, CGC_ENOMEM=4, CGC_ENOSYS=5, CGC_EPIPE=6
+ * Challenge binaries use these CGC constants (e.g., EINVAL=3) so syscall
+ * wrappers must return CGC error codes, not Linux error codes.
+ */
+static int linux_errno_to_cgc(int linux_errno) {
+  switch (linux_errno) {
+    case EBADF:  return CGC_EBADF;
+    case EFAULT: return CGC_EFAULT;
+    case EINVAL: return CGC_EINVAL;
+    case ENOMEM: return CGC_ENOMEM;
+    case ENOSYS: return CGC_ENOSYS;
+    case EPIPE:  return CGC_EPIPE;
+    default:     return linux_errno;
+  }
+}
+
 /* Terminates the process. */
 void cgc__terminate(unsigned int status) {
   exit(status);
@@ -31,7 +49,7 @@ int cgc_transmit(int fd, const void *buf, cgc_size_t count, cgc_size_t *tx_bytes
     const cgc_ssize_t ret = write(fd, buf, count);
 
     if (ret < 0) {
-        return errno;
+        return linux_errno_to_cgc(errno);
     } else if (tx_bytes != NULL) {
         *tx_bytes = ret;
     }
@@ -44,7 +62,7 @@ int cgc_receive(int fd, void *buf, cgc_size_t count, cgc_size_t *rx_bytes) {
     const cgc_ssize_t ret = read(fd, buf, count);
 
     if (ret < 0) {
-        return errno;
+        return linux_errno_to_cgc(errno);
     } else if (rx_bytes != NULL) {
         *rx_bytes = ret;
     }
@@ -110,7 +128,7 @@ int cgc_fdwait(int nfds, cgc_fd_set *readfds, cgc_fd_set *writefds,
   }
 
   if (actual_num_fds != nfds) {
-    return EINVAL;  /* Not actually specified, but oh well. */
+    return CGC_EINVAL;  /* Not actually specified, but oh well. */
   }
 
   if (readfds)  CGC_FD_ZERO(readfds);
@@ -129,7 +147,7 @@ int cgc_fdwait(int nfds, cgc_fd_set *readfds, cgc_fd_set *writefds,
           (timeout ? &max_wait_time : NULL));
 
   if (num_selected_fds < 0)
-    return errno;
+    return linux_errno_to_cgc(errno);
 
   if (readfds) {
     cgc_copy_os_fd_set(&read_fds, readfds);
@@ -171,7 +189,7 @@ int cgc_allocate(cgc_size_t length, int is_executable, void **addr) {
   void *return_address = mmap(NULL, length, page_perms, mmap_flags, -1, 0);
 
   if (return_address == MAP_FAILED) {
-    return errno;
+    return linux_errno_to_cgc(errno);
   }
 
   if (addr)
@@ -188,7 +206,7 @@ int cgc_deallocate(void *addr, cgc_size_t length) {
   const int ret = munmap(addr, length);
 
   if (ret < 0) {
-    return errno;
+    return linux_errno_to_cgc(errno);
   }
 
   return 0;

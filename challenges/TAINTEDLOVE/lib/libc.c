@@ -34,10 +34,12 @@ int cgc_receive_all(int fd, void *buf, cgc_size_t count, cgc_size_t *rx_bytes) {
   cgc_fd_set fdsToWait;
   int fdsReady = 0;
 
-  // XXXX: Guessed and tested for sweet spot.
+  // XXXX: Original value was 50000us (50ms), tuned for CGC/DECREE.
+  // On Linux with Python-based pollers, the inter-packet delay can exceed 50ms.
+  // Increase to 5 seconds to handle the additional overhead.
+  // Also reinitialize timeToWait each iteration: on Linux, select()
+  // modifies the timeout in place, so it must be reset on every loop iteration.
   struct cgc_timeval timeToWait;
-  timeToWait.tv_sec = 0;
-  timeToWait.tv_usec = 50000;
 
   while (bytes_left) {
 
@@ -47,6 +49,8 @@ int cgc_receive_all(int fd, void *buf, cgc_size_t count, cgc_size_t *rx_bytes) {
     fdsReady = 0;
     FD_ZERO(&fdsToWait);
     FD_SET(STDIN, &fdsToWait);
+    timeToWait.tv_sec = 5;
+    timeToWait.tv_usec = 0;
 
     if (SUCCESS != cgc_fdwait(STDIN+1, &fdsToWait, NULL, &timeToWait, &fdsReady)) {
 #ifdef DEBUG
@@ -97,7 +101,7 @@ int cgc_transmit_all(int fd, const void *buf, cgc_size_t count, cgc_size_t *tx_b
 
     tx_bytes_local = 0;
 
-    if (SUCCESS != (ret = cgc_transmit(STDIN, buf, bytes_left, &tx_bytes_local))) {
+    if (SUCCESS != (ret = cgc_transmit(STDOUT, buf, bytes_left, &tx_bytes_local))) {
       #ifdef DEBUG
         fprintf(cgc_stderr, "[E] transmit () call within cgc_transmit_all() failed\n");
       #endif

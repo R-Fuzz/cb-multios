@@ -75,7 +75,7 @@ int cgc_transmit_all(int fd, const void *buf, cgc_size_t count, cgc_size_t *tx_b
 
     tx_bytes_local = 0;
 
-    if (SUCCESS != (ret = cgc_transmit(STDIN, buf, bytes_left, &tx_bytes_local))) {
+    if (SUCCESS != (ret = cgc_transmit(STDOUT, buf, bytes_left, &tx_bytes_local))) {
       #ifdef DEBUG
         fprintf(cgc_stderr, "[E] transmit () call within transmit_all() failed\n");
       #endif

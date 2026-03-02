@@ -59,6 +59,9 @@ cgc_size_t tx_bytes = 0;
 
 unsigned char cgc_otp[OTP_SZ] = { 0 };
 
+// On Linux, use a global to hold the OTP pointer (CGC used a fixed stack address).
+void *cgc_ppotp = (void *)&cgc_otp;
+
 // Reconstituted ciphertext will always be smaller in length than the total 
 // received because overhead bytes are stripped (not appended).
 unsigned char ct[BUF_RX_SZ];
