@@ -31,9 +31,19 @@ struct chunk {
     struct list_node list;
 } __attribute__((packed));
 
+#ifdef __x86_64__
+/* On 64-bit, struct chunk (header=8 + list_node=16 packed) = 24 bytes.
+ * Footer is sizeof(cgc_size_t)=8 bytes. Minimum chunk must be at least
+ * sizeof(struct chunk) + sizeof(cgc_size_t) = 32 bytes so the free list
+ * node (list_node at offset 8, size 16) does not overlap the footer. */
+static cgc_size_t size_class_sizes[] = {
+    32, 64, 128, 256, 512, 1024, 2048, 4096
+};
+#else
 static cgc_size_t size_class_sizes[] = {
     16, 32, 64, 128, 256, 512, 1024, 2048
 };
+#endif
 
 #define NUM_SIZE_CLASSES (sizeof(size_class_sizes) / sizeof(cgc_size_t))
 
