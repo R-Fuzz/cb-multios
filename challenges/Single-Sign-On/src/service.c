@@ -37,12 +37,12 @@ unsigned long cgc_getAuthVal() {
 	int ret;
 
 	int b;
-	for(b = 0; b<4; b++) {
+	for(b = 0; b<(int)sizeof(unsigned long); b++) {
 		char byte = 0;
 		while (byte == 0 || byte == 0x0a) {
 			ret = cgc_random((void *)&byte, sizeof(byte), &rnd_bytes);
 			if(ret != 0)
-				cgc__terminate(RANDOM_ERROR);	
+				cgc__terminate(RANDOM_ERROR);
 		}
 		((unsigned char*)(&auth_val))[b] = byte;
 	}

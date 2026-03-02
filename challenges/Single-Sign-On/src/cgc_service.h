@@ -60,7 +60,7 @@ typedef struct {
 	unsigned long id;
 	unsigned long token;
 	char input[MAX_ARGS_SIZE];
-} Command;
+} __attribute__((packed)) Command;
 
 typedef struct resource_t {
 	struct resource_t *next;
