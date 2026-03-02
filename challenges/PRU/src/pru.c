@@ -189,6 +189,9 @@ int main(int cgc_argc, char *cgc_argv[]) {
 	int i;
 	pruCPU cpu;
 	cpu.numExecuted = 0;
+	cpu.pc = 0;
+	cpu.carry = 0;
+	cgc_memset(cpu.r, 0, sizeof(cpu.r));
 	cgc_memset(cpu.code, 0xff, 0x4000);
 	numInstructions = cgc_recvInt();
 	for(i=0;i<numInstructions;i++) {
