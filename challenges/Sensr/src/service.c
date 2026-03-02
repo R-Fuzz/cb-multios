@@ -287,7 +287,7 @@ int do_mix(cgc_state_t *state, pkt_t *pkt)
 
 static unsigned int do_hash(const unsigned char *_data, unsigned int len)
 {
-    unsigned char *data = malloc(len);
+    unsigned char *data = cgc_malloc(len);
     unsigned int i, hash = 0, xform = 0x12345678;
 
     cgc_memcpy(data, _data, len);
@@ -305,16 +305,15 @@ static unsigned int do_hash(const unsigned char *_data, unsigned int len)
     for (i = 0; i < len - 3; i += 4)
         hash += *(unsigned int *)(data + i);
 
-    free(data);
+    cgc_free(data);
     return hash;
 }
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
     pkt_t pkt;
     cgc_state_t cur_state;
-    void *secret_page = (void *)secret_page_i;
+    void *secret_page = (void *)CGC_FLAG_PAGE_ADDRESS;
     unsigned int secret_hash;
 
     secret_hash = do_hash(secret_page, 0x1000);
