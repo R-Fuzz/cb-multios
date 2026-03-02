@@ -190,7 +190,7 @@ static page_option cgc_get_response()
             return UPDATE;
         if( cgc_memcmp(&response[2], "help", cgc_strlen("help")) == 0 )
             return HELP;
-        if( cgc_memcmp(&response[2], "cgc_exit", cgc_strlen("exit")) == 0 )
+        if( cgc_memcmp(&response[2], "exit", cgc_strlen("exit")) == 0 )
             return EXIT;
     }
 
