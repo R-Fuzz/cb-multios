@@ -76,7 +76,7 @@ char *cgc_itoa(unsigned int number)
 int cgc_recvUntil(int fd, char *buf, int max, char delim)
 {
     char got = -1;
-    int i;
+    int i = 0;
     char *tmp;
     tmp = buf;
     while(i < max && got != delim) {

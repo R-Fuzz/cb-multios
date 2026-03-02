@@ -34,7 +34,7 @@ char *cgc_renderBoard(gamestate *state);
 char *cgc_pickaword(gamestate *state);
 
 char *cgc_pickaword(gamestate *state) {
-	return words[cgc_hugsnextrand(state) % (sizeof(words) / 4)];
+	return words[cgc_hugsnextrand(state) % (sizeof(words) / sizeof(words[0]))];
 }
 
 void cgc_hangman() {
