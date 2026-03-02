@@ -138,6 +138,7 @@ class Throw(object):
         self.procs = None
         self.pipe_raw = []
         self.pipe_buf = ''
+        self.buf_thread = None
 
     def is_ok(self, expected, result, message):
         """ Verifies 'expected' is equal to 'result', logging results in TAP
@@ -543,10 +544,12 @@ class Throw(object):
         # Add timeout check to prevent infinite wait
         wait_time = 0
         while len(self.pipe_raw) == 0:
-            # Check if process is still alive
+            # Check if both the process has terminated AND the buffer thread
+            # has finished reading all pipe data before giving up
             if self.procs and self.procs[0].poll() is not None:
-                # Process has terminated, return empty if no data
-                break
+                if self.buf_thread is None or not self.buf_thread.is_alive():
+                    # Process terminated and pipe fully drained, no more data
+                    break
             time.sleep(0.001)
             wait_time += 0.001
             # Prevent infinite wait (max 10 seconds for data)
@@ -578,7 +581,16 @@ class Throw(object):
             pipe: readable fileobject for a pipe
         """
         while True:
-            c = pipe.read(1)
+            # Use pipe.raw.read() (FileIO) instead of pipe.read() (BufferedReader)
+            # so that partial reads are returned immediately without blocking for
+            # the full buffer size. BufferedReader.read(N) blocks until N bytes
+            # are available or EOF, causing deadlock when a challenge binary writes
+            # fewer than N bytes and then waits for input.
+            raw = getattr(pipe, 'raw', None)
+            if raw is not None:
+                c = raw.read(4096)
+            else:
+                c = pipe.read(4096)
             # Python 3: pipe.read() returns bytes, need to decode
             if c in [None, b'', '']:
                 break
@@ -627,9 +639,9 @@ class Throw(object):
         self.procs, watcher = challenge_runner.run(self.cb_paths, self.timeout, seed, self.log)
 
         # Start a thread to buffer data from the challenges' stdout
-        buf_thread = threading.Thread(target=self.buffer_pipe_data, args=(self.procs[0].stdout,))
-        buf_thread.daemon = True
-        buf_thread.start()
+        self.buf_thread = threading.Thread(target=self.buffer_pipe_data, args=(self.procs[0].stdout,))
+        self.buf_thread.daemon = True
+        self.buf_thread.start()
 
         # Everything is ready, now we can run the test
         for method, arguments in self.pov:
@@ -646,7 +658,7 @@ class Throw(object):
             proc.terminate()
 
         # Wait for the watcher to report its results
-        buf_thread.join()
+        self.buf_thread.join()
         watcher.join()
 
     def dump(self):
