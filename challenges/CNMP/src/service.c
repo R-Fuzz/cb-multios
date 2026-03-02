@@ -215,6 +215,7 @@ int main(int cgc_argc, char *cgc_argv[]) {
     cgc_size_t cmd_buf_sz = 20;
     char buf[cmd_buf_sz];
     jokedb_struct jokedb;
+    cgc_memset(&jokedb, 0, sizeof(jokedb));
 
     // load with default jokes (array of joke_struct's)
     cgc_load_default_jokes(&jokedb);
