@@ -283,7 +283,7 @@ char *cgc_GetFilePath(FileNode *file)
   {
     return NULL;
   }
-  int pathLength = 4 + 1;
+  int pathLength = 8 + 1;  // 8 = strlen("cgc_root"), 1 = trailing '%' separator
   FileNode *parent = file->parent;
   while (parent != cgc_root)
   {
