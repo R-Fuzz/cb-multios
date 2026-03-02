@@ -306,7 +306,7 @@ static void cgc_free_route(route_t *route)
         {
             route->free = 1;
             route->ip = mem->free_head;
-            mem->free_head = ((intptr_t)route - (intptr_t)mem) / sizeof(route_t);
+            mem->free_head = 1 + ((intptr_t)route - (intptr_t)&mem->routes[0]) / sizeof(route_t);
             return;
         }
     }
