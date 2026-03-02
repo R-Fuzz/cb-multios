@@ -123,7 +123,6 @@ void RecvBoard(unsigned int *pboard, unsigned int max_size)
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
     unsigned char *secret_page = (unsigned char *)secret_page_i;
 
