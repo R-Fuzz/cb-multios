@@ -284,7 +284,7 @@ cgc_login(char *args)
     if (cgc_strlen(args) > MAX_NAME_LENGTH)
         return -1;
 #else
-    if (cgc_strlen(args) > MAX_NAME_LENGTH || strchr(args, '|') != NULL)
+    if (cgc_strlen(args) > MAX_NAME_LENGTH || cgc_strchr(args, '|') != NULL)
         return -1;
 #endif
 
@@ -341,11 +341,11 @@ cgc_greet(char *token)
 #ifndef PATCHED
             cgc_strcpy(name, tok + 5);
 #else
-            strncpy(name, tok + 5, MAX_NAME_LENGTH);
+            cgc_strncpy(name, tok + 5, MAX_NAME_LENGTH);
 #endif
         } else if (cgc_strncmp(tok, "counter=", 8) == 0) {
-            if (cgc_strlen(tok + 8) == 8)
-                counter = (unsigned int *)cgc_hex_to_uint(tok + 8);
+            if (cgc_strlen(tok + 8) == 2 * sizeof(unsigned int *))
+                counter = (unsigned int *)cgc_hex_to_ptr(tok + 8);
         }
     }
 

@@ -319,6 +319,14 @@ char *cgc_bin_to_hex(char *dst, const void *src_, cgc_size_t n);
 unsigned int cgc_hex_to_uint(char *s);
 
 /**
+ * Convert a 2*sizeof(void*)-byte hex string to a pointer-sized unsigned long
+ *
+ * @param s The string to convert
+ * @return The pointer-sized value s encodes
+ */
+unsigned long cgc_hex_to_ptr(char *s);
+
+/**
  * Convert an integer value to its decimal string representation.
  *
  * This functionality differs from itoa, primarily in only dealing with decimal

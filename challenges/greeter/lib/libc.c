@@ -311,6 +311,22 @@ cgc_hex_to_uint(char *s)
     return ret;
 }
 
+/* Convert a hex string of 2*sizeof(void*) chars back to a pointer-sized value */
+unsigned long
+cgc_hex_to_ptr(char *s)
+{
+    unsigned long ret = 0;
+    cgc_size_t n = sizeof(unsigned int *);
+    cgc_size_t i;
+
+    for (i = n; i > 0; i--) {
+        ret = (ret << 8) | ((unsigned long)cgc_to_bin(s[2 * (i - 1)]) << 4);
+        ret |= cgc_to_bin(s[2 * (i - 1) + 1]);
+    }
+
+    return ret;
+}
+
 char *
 cgc_itoa(int val, char *s)
 {
