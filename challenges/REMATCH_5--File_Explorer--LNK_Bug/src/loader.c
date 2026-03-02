@@ -145,14 +145,16 @@ int cgc_ExecuteFunction(uint8_t *address)
     {
       case OPCODE_READ_MEM:
       {
-        uint32_t *source = *(uint32_t **)address; 
+        uint32_t addr32 = *(uint32_t *)address;
+        uint32_t *source = (uint32_t *)(unsigned long)addr32;
         address += 4;
         regA = *source;
         break;
       }
       case OPCODE_WRITE_MEM:
       {
-        uint32_t *dest = *(uint32_t **)address; 
+        uint32_t addr32 = *(uint32_t *)address;
+        uint32_t *dest = (uint32_t *)(unsigned long)addr32;
         address += 4;
         uint32_t value = *(uint32_t *)address;
         address += 4;
@@ -161,7 +163,8 @@ int cgc_ExecuteFunction(uint8_t *address)
       }
       case OPCODE_WRITE_REG:
       {
-        uint32_t *dest = *(uint32_t **)address;
+        uint32_t addr32 = *(uint32_t *)address;
+        uint32_t *dest = (uint32_t *)(unsigned long)addr32;
         address += 4;
         *dest = regA;
         break;

@@ -39,7 +39,7 @@ uint16_t *pNextFileID = (uint16_t *)MAGIC_PAGE;
 FileNode *cgc_InitializeFileSystem()
 {
   cgc_root = cgc_calloc(sizeof(FileNode));
-  cgc_memcpy((char *)&cgc_root->name, &"cgc_root", 4);
+  cgc_memcpy((char *)&cgc_root->name, &"cgc_root", 8);
   cgc_root->type = FILE_DIRECTORY;
   numFiles = 1;
   return cgc_root;
@@ -302,7 +302,7 @@ char *cgc_GetFilePath(FileNode *file)
     *pathPtr = '%';
     parent = parent->parent;
   }
-  cgc_memcpy(path, &"cgc_root", 4);
+  cgc_memcpy(path, &"cgc_root", 8);
   return path;
 }
 
