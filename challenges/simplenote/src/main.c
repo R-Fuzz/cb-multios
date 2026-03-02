@@ -412,6 +412,7 @@ int cgc_append_thunk(char **argv, list_t** list)
   {
     content = cgc_realloc(content, cgc_strlen(tmp) + 1);
     ({ if (content == ((void *)0)) ({ cgc_fdprintf(2, "ERROR %s:%d:\t" "bad alloc" "\n", "src/main.c", 246); cgc_exit(1); }); });
+    argv[1] = content;
     cgc_strcpy(content, tmp);
   }
 
