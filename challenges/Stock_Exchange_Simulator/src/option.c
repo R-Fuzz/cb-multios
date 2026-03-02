@@ -216,7 +216,7 @@ cgc_size_t cgc_gen_order_fill_msg(packet_t *resp, OP_TYPE ot, char * sym, uint32
 	orderfill_t *of = (orderfill_t *) &(resp->op_data);
 	cgc_memcpy(sym, &(of->symbol), SYM_SIZE);
 	of->qty = qty;
-	return sizeof(orderfill_t)-sizeof(void *);
+	return sizeof(orderfill_t)-sizeof(uint32_t);
 }
 
 OP_ERR cgc_check_account_holding_in_qty_sell(option_order_t *sell_order, uint32_t acct_id){

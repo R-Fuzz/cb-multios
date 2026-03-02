@@ -29,12 +29,12 @@
 cgc_size_t cgc_get_data_len(packet_t *p){
 	switch(p->ot){
 		case BUY:
-			return sizeof(option_order_t) - sizeof(void *);
+			return sizeof(option_order_t) - sizeof(uint32_t);
 		case SELL:
-			return sizeof(option_order_t) - sizeof(void *);
+			return sizeof(option_order_t) - sizeof(uint32_t);
 
 		case QUOTE:
-			return sizeof(option_quote_t) - sizeof(void *);
+			return sizeof(option_quote_t) - sizeof(uint32_t);
 
 		default:
 			return 0;
@@ -62,7 +62,7 @@ cgc_size_t cgc_err_resp(OP_ERR e, packet_t *req, packet_t *p){
 		p->data_l = req->data_l;
 		return p->data_l;
 	}else{
-		p->op_data = (void *) e;
+		p->op_data = (uint32_t) e;
 	}
 	p->acct_id = req->acct_id;
 	

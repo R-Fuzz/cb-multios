@@ -70,7 +70,7 @@ typedef struct packet {
 	uint32_t acct_id;
 	uint32_t data_l;
 	uint32_t bank_id;
-	void * op_data;
+	uint32_t op_data;
 
 } packet_t;
 
