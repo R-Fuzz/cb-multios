@@ -593,6 +593,37 @@ cgc_size_t arg = va_arg(ap, cgc_size_t);
 - **Fix**: `__attribute__((packed))` on both `reqbody_t` and `reqpkt_t`
 - **Files**: `challenges/ValveChecks/src/cgc_service.h`
 
+### Filesystem_Command_Shell — `aa04d6b3` (partial)
+- **Category**: custom-malloc (hardcoded `+4`)
+- **Symptom**: All 100/100 polls fail with SIGSEGV on 64-bit
+- **Root Cause**: `lib/malloc.c` used a bucket+freelist allocator where the metadata header is `{cgc_size_t length, *next, *prev}`. The `length` field (= `sizeof(cgc_size_t)`) is the header overhead, and user data starts right after. All pointer arithmetic used hardcoded literal `4` (correct for 32-bit where `sizeof(cgc_size_t) = 4`) instead of `sizeof(cgc_size_t)`. On 64-bit `sizeof(cgc_size_t) = 8`, causing every allocation and free to compute wrong addresses, corrupting the heap immediately.
+- **Fix**: Replace all 8 instances of literal `4` with `sizeof(cgc_size_t)` in: `cgc_add_freelist_block` (length accounting), `cgc_free` (back-calculate header), `cgc_init_freelist` (initial block length), `cgc_freelist_alloc` (return pointer and chunk splitting), and `cgc_malloc` (bucket return pointer).
+- **Files**: `challenges/Filesystem_Command_Shell/lib/malloc.c`
+- **Result**: 200/200 polls passing on 64-bit
+
+### Network_File_System_v3 — `aa04d6b3` (partial)
+- **Category**: custom-malloc (hardcoded `+4`)
+- **Symptom**: ~40-50% of polls failing intermittently with SIGSEGV/exit(-1) on 64-bit
+- **Root Cause**: Identical custom malloc allocator to Filesystem_Command_Shell (same Cromulence library). `lib/malloc.c` hardcoded `4` for `sizeof(cgc_size_t)` throughout. The challenge uses C++ `new`/`delete` for its main data structures but also compiles `lib/fs.c` which calls `cgc_malloc`/`cgc_calloc`/`cgc_free` extensively. Heap corruption from the 4-vs-8 byte mismatch caused intermittent crashes.
+- **Fix**: Same as Filesystem_Command_Shell — replace all 8 instances of literal `4` with `sizeof(cgc_size_t)`.
+- **Files**: `challenges/Network_File_System_v3/lib/malloc.c`
+- **Result**: 200/200 polls passing on 64-bit
+
+### SPIFFS — `aa04d6b3` (partial)
+- **Category**: custom-malloc (header+footer allocator, two bugs)
+- **Symptom**: 20/100 polls failing with SIGSEGV on 64-bit
+- **Root Cause**: SPIFFS uses a different allocator design (header+footer, not bucket). The types are:
+  - `tMallocAllocHdr = {cgc_size_t alloc_size}` — 8 bytes on 64-bit
+  - `tMallocAllocFtr = {*pNext, *pPrev}` — 16 bytes on 64-bit
+  - Footer position formula: `block + alloc_size - sizeof(tMallocAllocHdr)`
+  - **Bug 1**: `cgc_add_free_list` used `grow_size = request_size + 4` instead of `+ sizeof(tMallocAllocHdr)`. On 64-bit the header is 8 bytes, so each new free-list block was 4 bytes too small, underallocating the tracking region.
+  - **Bug 2 (critical)**: `cgc_malloc` minimum allocation was `< 8`. On 64-bit with `alloc_size = 8` and `sizeof(tMallocAllocHdr) = 8`, the footer formula yields `block + 8 - 8 = block + 0`, placing the 16-byte footer AT the header position. The footer write overwrote both the header and adjacent memory → immediate heap corruption.
+- **Fix**:
+  1. `grow_size = request_size + sizeof(tMallocAllocHdr)` (was `+ 4`)
+  2. Minimum allocation: `if (alloc_size < sizeof(tMallocAllocFtr))` instead of `< 8`. On 32-bit `sizeof(tMallocAllocFtr) = 8` (same behavior); on 64-bit `= 16` (minimum doubles, preventing footer/header overlap).
+- **Files**: `challenges/SPIFFS/lib/malloc.c`
+- **Result**: 200/200 polls passing on 64-bit
+
 ---
 
 ## Debugging Techniques
@@ -631,3 +662,11 @@ for xml in polls/CHALLENGE/poller/for-release/GEN_*.xml; do
   fi
 done
 ```
+
+### greeter — `5edf2d60`
+- **Category**: pointer-encode (custom protocol with embedded pointer address)
+- **Symptom**: `greet` command always fails on 64-bit; counter never increments
+- **Root Cause**: `cgc_make_token()` serializes the counter pointer address as `sizeof(unsigned int *)` bytes of hex. On 32-bit = 8 hex chars, on 64-bit = 16 hex chars. But `cgc_greet()` checked `cgc_strlen(tok + 8) == 8` and used `cgc_hex_to_uint()` which only parses 4 bytes. Both the length check and decode function failed on 64-bit.
+- **Fix**: Add `cgc_hex_to_ptr()` that iterates `sizeof(unsigned int *)` bytes (handles both 32/64-bit). Change the check to `== 2 * sizeof(unsigned int *)`. Use `cgc_hex_to_ptr()` to decode.
+- **Files**: `challenges/greeter/lib/libc.c`, `challenges/greeter/lib/cgc_libc.h`, `challenges/greeter/src/service.c`
+- **Also fixed**: Pre-existing link errors in PATCHED path: `strchr` → `cgc_strchr`, `strncpy` → `cgc_strncpy`
