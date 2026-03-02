@@ -32,7 +32,7 @@ typedef enum {GETV,SETV,GETT,NOTHERE} codes_t;
 typedef struct reqbody {
     codes_t code;
     uint8_t data[REQ_SIZE];
-} reqbody_t;
+} __attribute__((packed)) reqbody_t;
 
 typedef struct reqpkt {
     reqbody_t data;
@@ -41,6 +41,6 @@ typedef struct reqpkt {
     double fp;
     uint32_t crc32;
     uint32_t md5[4];
-} reqpkt_t;
+} __attribute__((packed)) reqpkt_t;
 
 #endif
