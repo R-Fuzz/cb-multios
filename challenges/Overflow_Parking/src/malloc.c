@@ -121,7 +121,7 @@ void *cgc_malloc(cgc_size_t s) {
     ALLOCRWX(total,p);
 
     page = (char *)p + total;
-    page = (char *)((uint32_t)page & ~(PAGE_SIZE-1));
+    page = (char *)((cgc_size_t)page & ~(cgc_size_t)(PAGE_SIZE-1));
     //cgc_printf("@h\n",page);
     page_remaining = PAGE_SIZE - ((cgc_size_t)((char *)p+total) - (cgc_size_t)page);
     page += PAGE_SIZE-page_remaining;

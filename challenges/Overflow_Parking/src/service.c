@@ -55,14 +55,14 @@ typedef enum {
 
 struct parkcmd {
     cmdtype type;
-    cgc_size_t size;
-    char *cmdbuf; //this is cast to various structs 
-} typedef parkcmd_t;
+    uint32_t size;
+    char *cmdbuf; //this is cast to various structs
+} __attribute__((packed)) typedef parkcmd_t;
 
 struct parkinstr {
     instrtype type;
     parkcmd_t cmd;
-} typedef parkinstr_t;
+} __attribute__((packed)) typedef parkinstr_t;
 
 struct parkresp {
     resptype type;
