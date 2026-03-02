@@ -670,3 +670,30 @@ done
 - **Fix**: Add `cgc_hex_to_ptr()` that iterates `sizeof(unsigned int *)` bytes (handles both 32/64-bit). Change the check to `== 2 * sizeof(unsigned int *)`. Use `cgc_hex_to_ptr()` to decode.
 - **Files**: `challenges/greeter/lib/libc.c`, `challenges/greeter/lib/cgc_libc.h`, `challenges/greeter/src/service.c`
 - **Also fixed**: Pre-existing link errors in PATCHED path: `strchr` → `cgc_strchr`, `strncpy` → `cgc_strncpy`
+
+### TAINTEDLOVE — `6b6f16eb`
+- **Category**: fdwait-timeout (receive_all timeout too long for multi-packet polls)
+- **Symptom**: 67/100 polls timeout on 64-bit
+- **Root Cause**: `cgc_receive_all` used a 5-second `fdwait` timeout (increased from DECREE's 50ms to handle Linux overhead). Polls with 17+ messages, each waiting 5 seconds, exceeded the 15-second test limit.
+- **Fix**: Reduce timeout to 200ms. This is enough for the Python poller inter-packet delay while keeping total poll time well under 15 seconds.
+- **Files**: `challenges/TAINTEDLOVE/lib/libc.c`
+
+### QUIETSQUARE — `6b6f16eb`
+- **Category**: fdwait-timeout (same pattern as TAINTEDLOVE)
+- **Symptom**: 57/100 polls timeout on 64-bit
+- **Root Cause**: Same as TAINTEDLOVE — `cgc_receive_all` with 5-second fdwait timeout; polls have up to 25 messages.
+- **Fix**: Reduce timeout to 200ms.
+- **Files**: `challenges/QUIETSQUARE/lib/libc.c`
+
+### PKK_Steganography — `6b6f16eb`
+- **Category**: uninit-memory + slow-io + missing-null-terminator
+- **Symptom**: 49/100 polls fail; crashes and wrong output
+- **Root Cause**: Three distinct bugs:
+  1. `short text_size;` not initialized to 0 in `cgc_extract_text()`. OR-ing garbage stack bytes caused `text_size` to be huge, leading to out-of-bounds reads of the pixel buffer.
+  2. No null terminator after extracting text bytes. `cgc_printf("%s\n", text)` printed garbage bytes after the actual message.
+  3. `cgc_read_n()` called `cgc_receive()` one byte at a time. For 322KB images (322761 bytes), this produced extreme slowness (~17 seconds for the Python test framework).
+- **Fix**:
+  1. `short text_size = 0;`
+  2. Add `buf[i] = '\0';` after extraction loop
+  3. Change `cgc_read_n()` to greedy bulk reads: request `remaining` bytes, advance by `rx`, loop until done
+- **Files**: `challenges/PKK_Steganography/src/main.c`
