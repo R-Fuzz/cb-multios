@@ -387,7 +387,7 @@ class Response
 
   public:
     int Status;
-    cgc_size_t Length;
+    uint32_t Length;
     uint8_t Bytes[MAX_RESP_SZ];
 
     Response(void)
@@ -1187,7 +1187,7 @@ Response* process_req(Request* req)
   {
     case OPEN_F_NUM:
       {
-        cgc_size_t pathlen = *(cgc_size_t*)br->ReadN(sizeof(pathlen));
+        uint32_t pathlen = *(uint32_t*)br->ReadN(sizeof(pathlen));
         const char* pathname = (const char*)br->ReadN(pathlen, true);
         open_flags_t flags = *(open_flags_t*)br->ReadN(sizeof(flags));
         uint32_t mode = *(uint32_t*)br->ReadN(sizeof(mode));
@@ -1205,10 +1205,10 @@ Response* process_req(Request* req)
     case READ_F_NUM:
       {
         int fd = *(int *)br->ReadN(sizeof(fd));
-        cgc_size_t count = *(cgc_size_t *)br->ReadN(sizeof(count));
+        uint32_t count = *(uint32_t *)br->ReadN(sizeof(count));
 
         uint8_t* buf = new uint8_t[count];
-        cgc_ssize_t rx_cnt = api_read(fd, buf, count);
+        int32_t rx_cnt = (int32_t)api_read(fd, buf, count);
 
         resp = new Response();
         if (rx_cnt >= 0)
@@ -1223,10 +1223,10 @@ Response* process_req(Request* req)
     case WRITE_F_NUM:
       {
         int fd = *(int *)br->ReadN(sizeof(fd));
-        cgc_size_t count = *(cgc_size_t *)br->ReadN(sizeof(count));
+        uint32_t count = *(uint32_t *)br->ReadN(sizeof(count));
         uint8_t* buf = (uint8_t *)br->ReadN(count);
 
-        cgc_ssize_t tx_cnt = api_write(fd, buf, count);
+        int32_t tx_cnt = (int32_t)api_write(fd, buf, count);
 
         resp = new Response();
 
@@ -1241,9 +1241,9 @@ Response* process_req(Request* req)
     case LSEEK_F_NUM:
       {
         int fd = *(int *)br->ReadN(sizeof(fd));
-        off_t offset = *(off_t *)br->ReadN(sizeof(offset));
+        int32_t offset = *(int32_t *)br->ReadN(sizeof(offset));
         int whence = *(int *)br->ReadN(sizeof(whence));
-        off_t noffset = api_lseek(fd, offset, whence);
+        int32_t noffset = (int32_t)api_lseek(fd, offset, whence);
         resp = new Response();
         if (noffset >= 0)
         {
@@ -1266,7 +1266,7 @@ Response* process_req(Request* req)
       }
     case CREAT_F_NUM:
       {
-        cgc_size_t pathlen = *(cgc_size_t*)br->ReadN(sizeof(pathlen));
+        uint32_t pathlen = *(uint32_t*)br->ReadN(sizeof(pathlen));
         const char* pathname = (const char*)br->ReadN(pathlen, true);
         uint32_t mode = *(uint32_t *)br->ReadN(sizeof(mode));
         int fd = api_creat(pathname, mode);
@@ -1280,7 +1280,7 @@ Response* process_req(Request* req)
       }
     case UNLINK_F_NUM:
       {
-        cgc_size_t pathlen = *(cgc_size_t*)br->ReadN(sizeof(pathlen));
+        uint32_t pathlen = *(uint32_t*)br->ReadN(sizeof(pathlen));
         const char* pathname = (const char*)br->ReadN(pathlen, true);
         int ret = api_unlink(pathname);
         resp = new Response();
@@ -1305,8 +1305,8 @@ void send_resp(FILE* fd, Response* resp)
   cgc_fwrite(resp->Bytes, resp->Length, cgc_stdout);
 }
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
+    secret_page_i = (int)(intptr_t)CGC_FLAG_PAGE_ADDRESS;
     uint32_t volatile *secret_page = (uint32_t *)secret_page_i;
     uint64_t delim = 0x8442e492f255bf31;
     /* fxlat(stdin, "HASHTAGYOLOSWAG"); */
