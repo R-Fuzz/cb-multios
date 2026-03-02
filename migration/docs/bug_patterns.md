@@ -19,6 +19,9 @@ Extracted from git history, commit diffs, and per-challenge debug reports.
 - **varargs** — custom printf treats `va_list` as `char**` array; breaks on x86-64 register-based ABI
 - **flag-page-addr** — intermediate `intptr_t` variable truncates `CGC_FLAG_PAGE_ADDRESS` on 64-bit
 - **pre-existing** — bug exists in both 32-bit and 64-bit; not a porting issue
+- **clang-ub-opt** — undefined behavior in source code (e.g., left shift by type width) that GCC tolerates but clang -Os miscompiles
+- **sse-alignment** — compiler generates `movdqa` (aligned SSE load) for heap-allocated structs; requires ALIGNMENT=16 in custom malloc
+- **stale-pointer** — pointer not updated after realloc; manifests as use-after-free with garbage data
 - **test-runner-perf** — `cb-replay.py` per-read overhead (0.1s sleep) causes timeouts on polls with high `MAX_DEPTH` (500+ exchanges)
 
 ---
@@ -380,6 +383,54 @@ Extracted from git history, commit diffs, and per-challenge debug reports.
 - **Category**: pre-existing
 - **Symptom**: 17 tests fail on both 32-bit and 64-bit unpatched binary
 - **Root Cause**: These are intentional vulnerability tests (POV behavior); the patched binary has different failures that may be 64-bit specific
+
+### netstorage — `e86c5ff0`
+- **Category**: header-padding + intptr-size + sse-alignment
+- **Symptom**: SIGSEGV in cgc_usb_send_reply at 0x3270 on 64-bit
+- **Root Cause**: Three bugs compounding:
+  1. HEADER_PADDING=32 (was correct for 32-bit blk_t but wrong for 64-bit)
+  2. intptr_t defined as 32-bit unsigned int in memcpy_fast.c, truncating pointer alignment check
+  3. Compiler generates `movdqa` (ALIGNED SSE load) for urb_t* fields; with ALIGNMENT=8, allocations starting at 8-byte-aligned addresses fail the 16-byte alignment requirement
+- **Fix**: HEADER_PADDING=48, intptr_t=unsigned long for 64-bit, ALIGNMENT=16 for 64-bit
+- **Files**: `challenges/netstorage/lib/cgc_malloc.h`, `challenges/netstorage/src/memcpy_fast.c`
+
+### simplenote — `f9e58d5c`
+- **Category**: stale-pointer + header-padding + intptr-size
+- **Symptom**: Corrupted note content on 64-bit
+- **Root Cause**: In cgc_append_thunk, `argv[1]` was not updated after `cgc_realloc()`. When realloc moves the buffer to a new address, the caller's pointer (argv[1]) becomes stale. Subsequent `cgc_strcpy(content, tmp)` writes correctly, but the caller reads stale argv[1].
+- **Fix**: Add `argv[1] = content;` after realloc to sync the argument pointer
+- **Files**: `challenges/simplenote/src/main.c`, `challenges/simplenote/lib/cgc_malloc.h`
+
+### One_Vote — `dc7b86ae`
+- **Category**: struct-alloc (pointer size assumption)
+- **Symptom**: Hash table value lookups return wrong data on 64-bit
+- **Root Cause**: `cgc_ht_int_value_ptr` calculates value offset as `pair + sizeof(unsigned int)` = 4 bytes, but on 64-bit the key (a pointer) occupies 8 bytes. The value is stored AFTER the key, so the correct offset is `sizeof(void*)`.
+- **Fix**: `pair + sizeof(void *)` instead of `pair + sizeof(unsigned int)`
+- **Files**: `challenges/One_Vote/lib/hash_table.c`
+
+### Sensr — `54b89419`
+- **Category**: intptr-size + pointer-cast + custom-malloc
+- **Symptom**: Crash in do_hash() due to NULL deref on 64-bit
+- **Root Cause**:
+  1. intptr_t=int (32-bit) causing truncation in pointer arithmetic
+  2. do_hash() calls malloc()/free() instead of cgc_malloc()/cgc_free(), but malloc/free are not available in CGC environment
+  3. main() casts CGC_FLAG_PAGE_ADDRESS through int, truncating the 64-bit address
+- **Fix**: Fix intptr_t; use cgc_malloc/cgc_free; access CGC_FLAG_PAGE_ADDRESS directly
+- **Files**: `challenges/Sensr/lib/cgc_stdint.h`, `challenges/Sensr/src/service.c`
+
+### router_simulator — `39d06798` (partial fix)
+- **Category**: custom-malloc + clang-ub-opt (pre-existing)
+- **Symptom**: 59/100 polls fail on both 32-bit and 64-bit
+- **Root Cause (fixed)**: cgc_free_route computed 1-based free-list index incorrectly:
+  `(route - mem) / sizeof(route_t)` should be `1 + (route - &mem->routes[0]) / sizeof(route_t)`
+  The original subtracted from the struct base (which has a 16-byte header) instead of from routes[0].
+- **Root Cause (pre-existing, unfixed)**: mask_to_length() contains undefined behavior:
+  `0xFFFFFFFF << (32 - length)` when length=0 shifts by 32 bits (UB in C for 32-bit unsigned).
+  GCC treats this as 0 (correct behavior), but clang -Os optimizes the loop away, causing
+  mask_to_length() to always return 32. This causes all routes to be stored with length=31
+  (instead of the correct value), breaking prefix matching. Affects both 32-bit and 64-bit builds
+  equally since both use clang -Os.
+- **Files**: `challenges/router_simulator/src/main.c`, `challenges/router_simulator/lib/cgc_malloc.h`
 
 ---
 
