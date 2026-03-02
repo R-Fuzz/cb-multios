@@ -23,8 +23,21 @@
 #include "cgc_stdlib.h"
 #include "cgc_stdio.h"
 #include "cgc_string.h"
+#ifndef __x86_64__
 #include "cgc_packed.h"
+#else
+#include "cgc_stdint.h"
+/* Forward declarations for native 64-bit sort functions */
+int insertion_sort(int *array, cgc_size_t array_size, intptr_t *fptrs);
+int selection_sort(int *array, cgc_size_t array_size, intptr_t *fptrs);
+int heap_propagate(int *array, cgc_size_t array_size, cgc_size_t swap_idx, intptr_t *fptrs);
+int heapify(int *array, cgc_size_t array_size, intptr_t *fptrs);
+int heap_sort(int *array, cgc_size_t array_size, intptr_t *fptrs);
+int merge_helper(int *array, int *temp_array, int idx_start, int idx_end, intptr_t *fptrs);
+int merge_sort(int *array, cgc_size_t array_size, intptr_t *fptrs);
+#endif
 
+#ifndef __x86_64__
 #define MALLOC(_FPTRS, _SZ) ((*((void *(*)(cgc_size_t))(_FPTRS)[0]))(((_SZ))))
 #define FREE(_FPTRS, _PTR)  ((*((void *(*)(void *))(_FPTRS)[1]))(((_PTR))))
 #define MEMCPY(_FPTRS, _DST, _SRC, _SZ) ((*(void *(*)(void *, void *, cgc_size_t))(_FPTRS)[2])((_DST), (_SRC), (_SZ)))
@@ -38,7 +51,9 @@
                             ((*(int (*)(int *, int *, int, int, int *))(_FPTRS)[8])((_ARR1), (_ARR2), (_IDX1), (_IDX2), (_FPTRS)))
 #define cgc_ALLOCATE(_FPTRS, _LEN, _IS_X, _PADDR) ((*(int (*)(cgc_size_t, int, void **))(_FPTRS)[9])((_LEN), (_IS_X), (_PADDR)))
 #define DEALLOCATE(_FPTRS, _ADDR, _LEN) ((*(int (*)(void *, cgc_size_t))(_FPTRS)[10])((_ADDR), (_LEN)))
+#endif
 
+#ifndef __x86_64__
 int (*insertion_sort_unpacked)(int *, cgc_size_t, int *);
 unsigned char *insertion_sort_memory;
 
@@ -107,6 +122,12 @@ void cgc_init()
     cgc_unpack(insertion_sort_memory, sizeof(insertion_sort_bytes));
     insertion_sort_unpacked = (int (*)(int *, cgc_size_t, int *))insertion_sort_memory;
 }
+#else
+void cgc_init()
+{
+    /* On 64-bit, native C implementations are used directly; no bytecode unpacking needed */
+}
+#endif
 
 void cgc_swap(int *first, int *second)
 {
@@ -218,15 +239,21 @@ void cgc_check_seed()
 }
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
     cgc_init();
+#ifndef __x86_64__
     //int _G_FPTRS[] = { (int) &malloc, (int) &free, (int) &cgc_memcpy, (int) &cgc_memmove, (int) &print_array, (int) &swap,
     //                    (int) heapify, (int) heap_propagate, (int) merge_helper,
     //                    (int) &allocate, (int) &deallocate };
     int _G_FPTRS[] = { (int) &cgc_malloc, (int) &cgc_free, (int) &cgc_memcpy, (int) &cgc_memmove, (int) &cgc_print_array, (int) &cgc_swap,
                         (int) heapify_unpacked, (int) heap_propagate_unpacked, (int) merge_helper_unpacked,
                         (int) &cgc_allocate, (int) &cgc_deallocate };
+#else
+    intptr_t _G_FPTRS[] = { (intptr_t) &cgc_malloc, (intptr_t) &cgc_free, (intptr_t) &cgc_memcpy, (intptr_t) &cgc_memmove,
+                             (intptr_t) &cgc_print_array, (intptr_t) &cgc_swap,
+                             (intptr_t) heapify, (intptr_t) heap_propagate, (intptr_t) merge_helper,
+                             (intptr_t) &cgc_allocate, (intptr_t) &cgc_deallocate };
+#endif
 
     cgc_fbuffered(cgc_stdout, 1);
     cgc_fxlat(cgc_stdin, "2e0715f1709c");
@@ -275,20 +302,32 @@ int main(int secret_page_i,  char *unused[]) {
             cgc_print_array(array, array_size);
             break;
         case 3:
-            //cgc_printf("Insertion sort takes %d operations\n", insertion_sort(array, array_size, _G_FPTRS));;
+#ifndef __x86_64__
             cgc_printf("Insertion sort takes %d operations\n", (*insertion_sort_unpacked)(array, array_size, _G_FPTRS));
+#else
+            cgc_printf("Insertion sort takes %d operations\n", insertion_sort(array, array_size, _G_FPTRS));
+#endif
             break;
         case 4:
-            //cgc_printf("Selection sort takes %d operations\n", selection_sort(array, array_size, _G_FPTRS));
+#ifndef __x86_64__
             cgc_printf("Selection sort takes %d operations\n", (*selection_sort_unpacked)(array, array_size, _G_FPTRS));
+#else
+            cgc_printf("Selection sort takes %d operations\n", selection_sort(array, array_size, _G_FPTRS));
+#endif
             break;
         case 5:
-            //cgc_printf("Heap sort takes %d operations\n", heap_sort(array, array_size, _G_FPTRS));
+#ifndef __x86_64__
             cgc_printf("Heap sort takes %d operations\n", (*heap_sort_unpacked)(array, array_size, _G_FPTRS));
+#else
+            cgc_printf("Heap sort takes %d operations\n", heap_sort(array, array_size, _G_FPTRS));
+#endif
             break;
         case 6:
-            //cgc_printf("Merge sort takes %d operations\n", merge_sort(array, array_size, _G_FPTRS));
+#ifndef __x86_64__
             cgc_printf("Merge sort takes %d operations\n", (*merge_sort_unpacked)(array, array_size, _G_FPTRS));
+#else
+            cgc_printf("Merge sort takes %d operations\n", merge_sort(array, array_size, _G_FPTRS));
+#endif
             break;
         case 7:
             cgc_printf("Current Array\n");

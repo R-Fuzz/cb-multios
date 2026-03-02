@@ -30,11 +30,13 @@ class Emulator
 private:
     inline bool in_stack(int mem)
     {
+        /* Stack uses virtual addresses [STACK_BASE, STACK_BASE+STACK_SIZE).
+         * This avoids storing real host pointers in 32-bit int registers. */
 #ifdef PATCHED_1
-        if ((unsigned char *)mem < d_stack)
+        if ((unsigned int)mem < (unsigned int)STACK_BASE)
             return false;
 #endif
-        return (unsigned char *)mem - d_stack < STACK_SIZE;
+        return (unsigned int)(mem - STACK_BASE) < (unsigned int)STACK_SIZE;
     }
     inline bool in_heap(int mem)
     {
@@ -93,6 +95,7 @@ public:
 
     static const int HEAP_SIZE = 0x40000000;
     static const int STACK_SIZE = 65536;
+    static const int STACK_BASE = 0x40000000; /* virtual base for stack, just above heap */
 private:
     bool d_fault;
     unsigned char *d_stack;

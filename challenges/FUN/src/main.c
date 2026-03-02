@@ -20,6 +20,8 @@
  * THE SOFTWARE.
  *
  */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wint-conversion"
 #include "cgc_stdlib.h"
 #include "cgc_ctype.h"
 #include "cgc_stddef.h"
@@ -670,8 +672,8 @@ static void cgc_my_write_uint(uintptr_t value)
     else
     {
         tmp[0] = 0xFF;
-        *(uintptr_t *)&tmp[1] = value;
-        to_send = 1 + sizeof(uintptr_t);
+        *(uint32_t *)&tmp[1] = (uint32_t)value;
+        to_send = 1 + sizeof(uint32_t);
     }
 
     cgc_transmit(STDOUT, tmp, to_send, &bytes);
@@ -718,8 +720,10 @@ static intptr_t cgc_my_read_uint(uintptr_t *pvalue)
     }
     else
     {
-        if (!CALL(READ_ALL, &value, sizeof(value)))
+        uint32_t value32 = 0;
+        if (!CALL(READ_ALL, &value32, sizeof(uint32_t)))
             return 0;
+        value = value32;
     }
 
     *pvalue = value;
@@ -934,3 +938,4 @@ funptr_t funcs[] = {
     REGISTER(WRITE_ERROR, cgc_my_write_error),
     REGISTER(WRITE_STRING, cgc_my_write_string)
 };
+#pragma clang diagnostic pop

@@ -38,7 +38,7 @@
 
 int cgc_g_rslr = 0;
 op_t *cgc_g_calcs = NULL;
-cgc_size_t cgc_g_sz_calcs = 0;
+uint32_t cgc_g_sz_calcs = 0;
 cgc_size_t cgc_g_num_calcs = 0;
 
 void cgc_handle_calc(unsigned int cmd)
@@ -88,7 +88,7 @@ void cgc_handle_imp(op_t **calcs)
 {
   op_t op;
   unsigned int i;
-  if (cgc_fread(&cgc_g_sz_calcs, sizeof(cgc_size_t), cgc_stdin) != sizeof(cgc_size_t))
+  if (cgc_fread(&cgc_g_sz_calcs, sizeof(cgc_g_sz_calcs), cgc_stdin) != sizeof(cgc_g_sz_calcs))
     cgc_exit(0);
   if (cgc_g_sz_calcs > 30 || cgc_g_sz_calcs < 3)
     return;
@@ -149,9 +149,8 @@ void cgc_handle_cmp()
 
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    void *secret_page = (void *)secret_page_i;
+    void *secret_page = (void *)CGC_FLAG_PAGE_ADDRESS;
 
     (void) secret_page;
 
@@ -166,7 +165,7 @@ int main(int secret_page_i,  char *unused[]) {
       cgc_g_rslr = -cgc_g_rslr;
     cgc_fwrite(&cgc_g_rslr, 2, cgc_stdout);
 
-    if (cgc_fread(&cgc_g_sz_calcs, sizeof(cgc_size_t), cgc_stdin) != sizeof(cgc_size_t))
+    if (cgc_fread(&cgc_g_sz_calcs, sizeof(cgc_g_sz_calcs), cgc_stdin) != sizeof(cgc_g_sz_calcs))
       return 0;
 #ifdef PATCHED_1
     if (cgc_g_sz_calcs > 30 || cgc_g_sz_calcs < 3)

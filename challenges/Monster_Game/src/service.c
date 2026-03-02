@@ -209,7 +209,7 @@ pqueue cgc_dequeue( )
 }
 
 /// Determine if they are adjacent
-int cgc_check_adjacent( sx, sy, dx, dy )
+int cgc_check_adjacent( int sx, int sy, int dx, int dy )
 {
 	if ( sx == dx ) {
 		if ( (( sy + 1 ) == dy) || ( (sy - 1 ) == dy ) ) {
@@ -1163,13 +1163,12 @@ void cgc_print_player( pplayer pp )
 }
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
 	pmap pm = NULL;
 	pplayer pp = NULL;
 
 	/// Initialized the secret page stuff
-	secret_page = (unsigned char*)secret_page_i;
+	secret_page = (unsigned char*)CGC_FLAG_PAGE_ADDRESS;
 	cgc_page_index = 0;
 	root = NULL;
 	queue_matrix = NULL;

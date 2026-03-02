@@ -31,7 +31,7 @@ Emulator::Emulator(void *sp, void *heap)
 {
     cgc_memset(d_reg, 0, sizeof(d_reg));
     cgc_memset(d_dirty_pages, 0, sizeof(d_dirty_pages));
-    d_reg[REG_sp] = (int)sp + STACK_SIZE;
+    d_reg[REG_sp] = STACK_BASE + STACK_SIZE;  /* virtual stack pointer */
     d_zf = 0;
     d_cf = 0;
 }
@@ -51,7 +51,7 @@ void Emulator::reset()
     // Reset registers
     cgc_memset(d_reg, 0, sizeof(d_reg));
     cgc_memset(d_dirty_pages, 0, sizeof(d_dirty_pages));
-    d_reg[REG_sp] = (int)d_stack + STACK_SIZE;
+    d_reg[REG_sp] = STACK_BASE + STACK_SIZE;  /* virtual stack pointer */
     d_zf = 0;
     d_cf = 0;
 }
@@ -217,7 +217,7 @@ int Emulator::get_operand(const Operand &opr)
             else if (in_heap(mem) && in_heap(mem + 3))
                 return *(int *)(d_heap + mem);
             else if (in_stack(mem) && in_stack(mem + 3))
-                return *(int *)mem;
+                return *(int *)(d_stack + (mem - STACK_BASE));
         }
         d_fault = true;
         return 0;
@@ -243,7 +243,7 @@ void Emulator::set_operand(const Operand &opr, int value)
                 d_dirty_pages[mem / 0x8000] |= 1 << ((mem / 0x1000) % 8);
             }
             else if (in_stack(mem) && in_stack(mem + 3))
-                *(int *)mem = value;
+                *(int *)(d_stack + (mem - STACK_BASE)) = value;
             else
                 d_fault = true;
         }

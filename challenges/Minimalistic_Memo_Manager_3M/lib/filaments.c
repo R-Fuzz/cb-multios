@@ -96,7 +96,13 @@ void cgc_filaments_new(start_func_t func, void *userdata)
     fib->userdata = userdata;
     cgc_memset(fib->env, 0, sizeof(fib->env));
     fib->env->_b[0] = (long)cgc___filaments_new;
+#ifdef __x86_64__
+    /* On 64-bit, align stack so that after 'ret' increments RSP by 8,
+     * the resulting RSP is 16-byte aligned per x86-64 ABI */
+    fib->env->_b[2] = (long)fib->stack + 0x7ff8;
+#else
     fib->env->_b[2] = (long)fib->stack + 0x7ffc;
+#endif
 
     fib->next = g_active_fibs;
     g_active_fibs = fib;
