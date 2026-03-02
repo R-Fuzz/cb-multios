@@ -62,9 +62,9 @@ void PrintPlaylist(Playlist *playlist, unsigned int playlist_id)
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    unsigned char *secret_page = (unsigned char *)secret_page_i;
+    unsigned char *secret_page = (unsigned char *)CGC_FLAG_PAGE_ADDRESS;
+    (void)secret_page_i;
     /* If you want to obfuscate input/output, uncomment and change */
     cgc_fxlat(cgc_stdin, "393748225");
     cgc_fxlat(cgc_stdout, "393748225");
