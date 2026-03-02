@@ -108,8 +108,8 @@ fail:
 
 void cgc_otp_generate_otp(otp_t *o)
 {
-    cgc_size_t sz = 0;
-    if (cgc_read_n(STDIN, (char *)&sz, sizeof(cgc_size_t)) != sizeof(cgc_size_t))
+    uint32_t sz = 0;
+    if (cgc_read_n(STDIN, (char *)&sz, sizeof(uint32_t)) != sizeof(uint32_t))
         goto fail;
 
     if (!o)
@@ -174,10 +174,10 @@ fail:
 
 void cgc_otp_set_seeds(otp_t *o)
 {
-    cgc_size_t sv = 0, idx = 0;
-    if (cgc_read_n(STDIN, (char *)&sv, sizeof(cgc_size_t)) != sizeof(cgc_size_t))
+    uint32_t sv = 0, idx = 0;
+    if (cgc_read_n(STDIN, (char *)&sv, sizeof(uint32_t)) != sizeof(uint32_t))
         goto fail;
-    if (cgc_read_n(STDIN, (char *)&idx, sizeof(cgc_size_t)) != sizeof(cgc_size_t))
+    if (cgc_read_n(STDIN, (char *)&idx, sizeof(uint32_t)) != sizeof(uint32_t))
         goto fail;
 
     if (!o)
@@ -199,12 +199,12 @@ fail:
 void cgc_otp_verify_otp(otp_t *o)
 {
     char token[MAX_OTP_LEN];
-    cgc_size_t sv = 0, idx = 0, sz = 0;
-    if (cgc_read_n(STDIN, (char *)&idx, sizeof(cgc_size_t)) != sizeof(cgc_size_t))
+    uint32_t sv = 0, idx = 0, sz = 0;
+    if (cgc_read_n(STDIN, (char *)&idx, sizeof(uint32_t)) != sizeof(uint32_t))
         goto fail;
-    if (cgc_read_n(STDIN, (char *)&sv, sizeof(cgc_size_t)) != sizeof(cgc_size_t))
+    if (cgc_read_n(STDIN, (char *)&sv, sizeof(uint32_t)) != sizeof(uint32_t))
         goto fail;
-    if (cgc_read_n(STDIN, (char *)&sz, sizeof(cgc_size_t)) != sizeof(cgc_size_t))
+    if (cgc_read_n(STDIN, (char *)&sz, sizeof(uint32_t)) != sizeof(uint32_t))
         goto fail;
     if (cgc_read_n(STDIN, token, sz) != sz)
         goto fail;
