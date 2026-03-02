@@ -23,12 +23,12 @@
 #include "cgc_common.h"
 #include "cgc_rng.h"
 
-const rng_def_t system_rng;
-const rng_def_t lcg_rng;
+extern const rng_def_t cgc_system_rng;
+extern const rng_def_t cgc_lcg_rng;
 
 static const rng_def_t *rngs[] = {
-    [RNG_SYSTEM] = &system_rng,
-    [RNG_LCG] = &lcg_rng
+    [RNG_SYSTEM] = &cgc_system_rng,
+    [RNG_LCG] = &cgc_lcg_rng
 };
 
 int cgc_rng_init(rng_t *rng, unsigned int id)
