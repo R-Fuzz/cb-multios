@@ -51,9 +51,9 @@ int start_training(NeuralNet &nnet)
 {
   uint16_t numBeds, numBaths, sqFt, numCrimes, price;
   unsigned int i;
-  cgc_size_t numSamples;
+  uint32_t numSamples;
   vector<double> input, target;
-  if (cgc_fread(&numSamples, sizeof(cgc_size_t), cgc_stdin) != sizeof(cgc_size_t))
+  if (cgc_fread(&numSamples, sizeof(uint32_t), cgc_stdin) != sizeof(uint32_t))
     goto fail;
   if (numSamples < 500 || numSamples > 1000)
     goto fail;
@@ -111,9 +111,8 @@ fail:
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    char *secret_page = (char *)secret_page_i;
+    char *secret_page = (char *)CGC_FLAG_PAGE_ADDRESS;
     (void) secret_page;
 
     unsigned int p;
