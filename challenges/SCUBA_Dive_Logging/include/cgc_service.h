@@ -28,8 +28,9 @@ THE SOFTWARE.
 #define SERVICE_H
 
 #include "cgc_dates.h"
+#include "cgc_stdint.h"
 
-typedef unsigned long datetime_type;
+typedef uint32_t datetime_type;
 
 typedef struct {
 

@@ -69,7 +69,7 @@ stamp_t *cgc_get_new_stamp(void) {
 		cgc_seed_idx = (cgc_seed_idx + 3) % SEED_MAX;
 #else
 		for (int i = 0; i < sizeof(stamp_t); i++) {
-			rand((char *)&cgc_seed_idx, 2);
+			cgc_rand((char *)&cgc_seed_idx, 2);
 			s->serial[i] = seed[cgc_seed_idx % SEED_MAX];
 		}
 #endif
