@@ -114,7 +114,7 @@ typedef struct _inode {
 // superblock
 #define CRFS 0x43524653
 #define MAX_INODE_PAGES 64
-#define INODES_PER_PAGE 16
+#define INODES_PER_PAGE (PAGE_SIZE / sizeof(inode))
 typedef struct _superblock {
 	uint32_t magic;
 	uint32_t blocksize;
@@ -136,7 +136,7 @@ typedef struct _free_t {
 free_t free_list[MAX_FREE_PAGES];
 
 // directory
-#define MAX_DIR_INODES 128
+#define MAX_DIR_INODES (DATA_BLOCK_SIZE / sizeof(inode *))
 typedef struct _directory {
 	inode *inodes[MAX_DIR_INODES];
 } directory;
