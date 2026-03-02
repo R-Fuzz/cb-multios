@@ -34,7 +34,9 @@ format [1].
 import os
 import argparse
 import multiprocessing as mp
+import queue
 import re
+import select
 import socket
 import time
 import threading
@@ -136,9 +138,10 @@ class Throw(object):
         self.negotiate = negotiate
 
         self.procs = None
-        self.pipe_raw = []
+        self.pipe_raw = queue.Queue()
         self.pipe_buf = ''
         self.buf_thread = None
+        self.pipe_event = threading.Event()
 
     def is_ok(self, expected, result, message):
         """ Verifies 'expected' is equal to 'result', logging results in TAP
@@ -399,7 +402,7 @@ class Throw(object):
         data_len = len(self._read_buffer)
         while data_len < read_len:
             left = read_len - data_len
-            data_read = self.read_from_proc(max(4096, left))
+            data_read = self.read_from_proc(left)
             if len(data_read) == 0:
                 # data_read = '\n'
                 self.log_fail('recv failed. (%s so far)' % repr(data))
@@ -540,34 +543,69 @@ class Throw(object):
         Returns:
             (str): data read from the pipe
         """
-        # Wait until there's data in the raw buffer
-        # Add timeout check to prevent infinite wait
-        wait_time = 0
-        while len(self.pipe_raw) == 0:
-            # Check if both the process has terminated AND the buffer thread
-            # has finished reading all pipe data before giving up
-            if self.procs and self.procs[0].poll() is not None:
-                if self.buf_thread is None or not self.buf_thread.is_alive():
-                    # Re-check pipe_raw after thread is done to avoid a race
-                    # condition where the thread appended data just before exiting
-                    if len(self.pipe_raw) == 0:
-                        # Process terminated and pipe fully drained, no more data
-                        break
-            time.sleep(0)
-            wait_time += 0.0001
-            # Prevent infinite wait (max 10 seconds for data)
-            if wait_time > 10:
+        # Wait for data from the buffer thread using threading.Event to avoid
+        # busy-waiting (which caused severe performance issues with large data
+        # transfers like CTTP's 154KB challenge strings).
+        #
+        # Behavior: wait for the first data chunk to arrive (blocking), then
+        # return as soon as the queue is drained (even if < size bytes). This
+        # allows both large sequential reads (CTTP) and partial reads for
+        # delimiter-based protocols (CNMP).
+        deadline = time.time() + 10  # max 10 seconds total wait
+        got_any_data = (len(self.pipe_buf) > 0)
+        while len(self.pipe_buf) < size:
+            # Drain all currently available chunks from the queue
+            queue_had_data = False
+            try:
+                while True:
+                    chunk = self.pipe_raw.get_nowait()
+                    self.pipe_buf += chunk
+                    if os.name == 'nt' and self.pipe_buf.endswith('\r\n'):
+                        self.pipe_buf = self.pipe_buf[:-2] + '\n'
+                    queue_had_data = True
+                    got_any_data = True
+            except queue.Empty:
+                pass
+
+            if len(self.pipe_buf) >= size:
                 break
 
-        # Fill up the temp buffer until we have the requested amount of data
-        while len(self.pipe_buf) < size and len(self.pipe_raw) != 0:
-            self.pipe_buf += self.pipe_raw.pop(0)
+            # If we already had data and no new data arrived this iteration,
+            # return what we have (partial read). This allows _read_delim to
+            # work correctly with short lines from interactive protocols.
+            if got_any_data and not queue_had_data:
+                break
 
-            # Convert CRLF to LF only on Windows where programs output CRLF
-            # On Linux/macOS, programs output raw binary data and CRLF sequences
-            # may be legitimate binary data that should not be converted
-            if os.name == 'nt' and self.pipe_buf.endswith('\r\n'):
-                self.pipe_buf = self.pipe_buf[:-2] + '\n'
+            # Check if process and buffer thread are done
+            if self.procs and self.procs[0].poll() is not None:
+                if self.buf_thread is None or not self.buf_thread.is_alive():
+                    break
+
+            remaining = deadline - time.time()
+            if remaining <= 0:
+                break
+
+            # Wait for the buffer thread to signal that new data is available.
+            # Use a short initial timeout so we can return partial data quickly
+            # if only a small amount arrives, but use a longer timeout when
+            # we haven't received any data yet (waiting for service to respond).
+            wait_timeout = 0.05 if got_any_data else min(remaining, 0.5)
+            self.pipe_event.clear()
+            # Drain queue one more time in case data arrived between clear and wait
+            try:
+                while True:
+                    chunk = self.pipe_raw.get_nowait()
+                    self.pipe_buf += chunk
+                    if os.name == 'nt' and self.pipe_buf.endswith('\r\n'):
+                        self.pipe_buf = self.pipe_buf[:-2] + '\n'
+                    got_any_data = True
+            except queue.Empty:
+                pass
+
+            if len(self.pipe_buf) >= size:
+                break
+
+            self.pipe_event.wait(timeout=wait_timeout)
 
         # Return the amount requested
         res = self.pipe_buf[:size]
@@ -591,15 +629,16 @@ class Throw(object):
             # fewer than N bytes and then waits for input.
             raw = getattr(pipe, 'raw', None)
             if raw is not None:
-                c = raw.read(4096)
+                c = raw.read(65536)
             else:
-                c = pipe.read(4096)
+                c = pipe.read(65536)
             # Python 3: pipe.read() returns bytes, need to decode
             if c in [None, b'', '']:
                 break
             if isinstance(c, bytes):
                 c = c.decode('latin-1')
-            self.pipe_raw.append(c)
+            self.pipe_raw.put(c)
+            self.pipe_event.set()
 
     def gen_seed(self):
         """ Prepare the seed that will be used in the replay """
