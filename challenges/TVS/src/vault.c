@@ -28,11 +28,14 @@
 #include "cgc_protocols.h"
 #include "cgc_time.h"
 #include "cgc_vault.h"
+#ifdef __x86_64__
+#include <sys/mman.h>
+#endif
 
 #define VAULT_SIZE 500
 
 typedef struct {
-    void *data;
+    uint32_t data;
     unsigned int len;
 } locker_t;
 
@@ -69,7 +72,23 @@ static void write_msg(uint8_t cmd, void *data, cgc_size_t n)
 
 void cgc_init_vault()
 {
+#ifdef __x86_64__
+    /* On 64-bit, place vault at a fixed address so locker IDs (which are
+     * raw pointers) match the 32-bit poll expectations.
+     * 32-bit polls expect contents[0] at 0xB7FC0024, so:
+     *   the_vault = 0xB7FC0018 (offset 12 before contents[0])
+     *   page base  = 0xB7FC0000 */
+    void *vault_mem = mmap((void*)0xB7FC0000, 8192, PROT_READ|PROT_WRITE,
+                           MAP_ANONYMOUS|MAP_PRIVATE|MAP_FIXED_NOREPLACE, -1, 0);
+    if (vault_mem == MAP_FAILED) {
+        /* Fallback: use heap allocation (polls may fail) */
+        the_vault = cgc_malloc(sizeof(vault_t));
+    } else {
+        the_vault = (vault_t *)((char *)vault_mem + 0x18);
+    }
+#else
     the_vault = cgc_malloc(sizeof(vault_t));
+#endif
     /* 2014-12-24 23:00:00 */
     the_vault->open_time = ((2208988800ULL + 1419462000) * 1000);
     the_vault->open_length = (3600 * 1000);
@@ -162,7 +181,7 @@ uint32_t cgc_store_in_vault(uint32_t id, void *data, unsigned int n)
         return 0;
 
     cgc_memcpy(copy, data, n);
-    locker->data = copy;
+    locker->data = (uint32_t)(uintptr_t)copy;
     locker->len = n;
     return (uint32_t)locker;
 }
@@ -176,10 +195,10 @@ void* cgc_retrieve_from_vault(uint32_t id, unsigned int *outlen)
         if (locker < &the_vault->contents[0] || locker >= &the_vault->contents[the_vault->num_contents] || ((intptr_t)locker - (intptr_t)&the_vault->contents[0]) % sizeof(locker_t))
             return NULL;
 #endif
-        void *retval = locker->data;
+        void *retval = (void *)(uintptr_t)locker->data;
 
         *outlen = locker->len;
-        locker->data = NULL;
+        locker->data = 0;
         locker->len = 0;
         return retval;
     }
