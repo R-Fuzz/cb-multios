@@ -58,14 +58,18 @@ typedef struct input {
 
 int cgc_read_n(int fd, char *buf, cgc_size_t len)
 {
-  cgc_size_t i;
   char *c = buf;
-  for (i = 0; i < len; ++i)
+  cgc_size_t remaining = len;
+  while (remaining > 0)
   {
     cgc_size_t rx;
-    if (cgc_receive(fd, c, 1, &rx) != 0 || rx == 0)
+    /* Read up to remaining bytes at once instead of 1 byte at a time.
+     * On Linux, cgc_receive maps to read(2) which can return partial data
+     * when the pipe buffer is not full; loop until all bytes are received. */
+    if (cgc_receive(fd, c, remaining, &rx) != 0 || rx == 0)
       break;
-    c++;
+    c += rx;
+    remaining -= rx;
   }
   return c - buf;
 }
@@ -241,7 +245,7 @@ int cgc_extract_text(pkk_t *pkk, char *buf)
   if (pkk && buf && pkk->pixels)
   {
     int i, j, tag = 0;
-    short text_size;
+    short text_size = 0;
     pixel = (char *) pkk->pixels;
 
     for (i = 0; i < 4; ++i)
@@ -268,6 +272,7 @@ int cgc_extract_text(pkk_t *pkk, char *buf)
       c = cgc_recover_byte(&pixel);
       buf[i] = c;
     }
+    buf[i] = '\0';
 
     tag = 0;
     for (i = 0; i < 4; ++i)

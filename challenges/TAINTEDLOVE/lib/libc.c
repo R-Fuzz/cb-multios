@@ -36,7 +36,8 @@ int cgc_receive_all(int fd, void *buf, cgc_size_t count, cgc_size_t *rx_bytes) {
 
   // XXXX: Original value was 50000us (50ms), tuned for CGC/DECREE.
   // On Linux with Python-based pollers, the inter-packet delay can exceed 50ms.
-  // Increase to 5 seconds to handle the additional overhead.
+  // Use 1 second: enough to handle Linux overhead, short enough that multiple
+  // receive_all calls per poll don't exceed the 15-second test timeout.
   // Also reinitialize timeToWait each iteration: on Linux, select()
   // modifies the timeout in place, so it must be reset on every loop iteration.
   struct cgc_timeval timeToWait;
@@ -49,8 +50,8 @@ int cgc_receive_all(int fd, void *buf, cgc_size_t count, cgc_size_t *rx_bytes) {
     fdsReady = 0;
     FD_ZERO(&fdsToWait);
     FD_SET(STDIN, &fdsToWait);
-    timeToWait.tv_sec = 5;
-    timeToWait.tv_usec = 0;
+    timeToWait.tv_sec = 0;
+    timeToWait.tv_usec = 200000;  /* 200ms: enough for Python poller, short enough for many packets */
 
     if (SUCCESS != cgc_fdwait(STDIN+1, &fdsToWait, NULL, &timeToWait, &fdsReady)) {
 #ifdef DEBUG
