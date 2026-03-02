@@ -257,10 +257,18 @@ int main(int cgc_argc, char *cgc_argv[]) {
     if (cgc_fread_until(temp, '\n', sizeof(temp), cgc_stdin) == EXIT_FAILURE)
         return 9;
 
-    custom_prng = (unsigned int (*)(unsigned int, unsigned int))cgc_atoi(temp);
-
-    if (custom_prng && (unsigned int)custom_prng < 0x08000000)
-        return 10;
+    {
+        unsigned int prng_addr = cgc_atoi(temp);
+        if (prng_addr && prng_addr < 0x08000000)
+            return 10;
+        /* Map DECREE binary addresses to Linux function pointers */
+        if (prng_addr == 0x08c6b0d0)
+            custom_prng = cgc_prng;
+        else if (prng_addr == 0x08c6b100)
+            custom_prng = cgc_another_prng;
+        else
+            custom_prng = (unsigned int (*)(unsigned int, unsigned int))(unsigned long)prng_addr;
+    }
 
     if (!SENDSTR(SECUREMODE))
         return 11;
