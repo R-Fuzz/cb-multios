@@ -40,7 +40,7 @@ unsigned int cgc_prng()
 void cgc_random_string(char *buf, cgc_size_t len)
 {
     int i;
-    int r;
+    unsigned int r;
     char str[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     for (i = 0; i < len; ++i)
     {
@@ -470,9 +470,8 @@ void cgc_do_random_action(ctf_t *ctf)
 }
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    void *secret_page = (void *)secret_page_i;
+    void *secret_page = (void *)CGC_FLAG_PAGE_ADDRESS;
     char buf[256];
 
     r = *(unsigned int *)secret_page ^ *(unsigned int *)&secret_page[20];
