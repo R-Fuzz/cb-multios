@@ -826,3 +826,36 @@ done
 - **Symptom**: 100/100 polls fail on 64-bit
 - **Root Cause**: `lib/malloc.c` used hardcoded `+4`/`-4` (sizeof uint32_t) instead of `sizeof(cgc_size_t)` for malloc header offsets. On 64-bit, `cgc_size_t=8` so offsets were wrong by 4 bytes, corrupting heap. Fix: replace all `+4`/`-4` with `+sizeof(cgc_size_t)`/`-sizeof(cgc_size_t)`.
 - **Files**: `challenges/Query_Calculator/lib/malloc.c`
+
+---
+
+## Session: CNMP, CTTP, Carbonate, Charter, Corinth, Estadio, HeartThrob
+
+### CNMP — uninitialized struct on stack
+- **Category**: uninit-memory
+- **Symptom**: 100/100 polls fail on 64-bit; service silently drops all user-added jokes
+- **Root Cause**: `jokedb_struct jokedb` declared on stack without initialization. In 32-bit, the `count` field happens to be zero from stack alignment. In 64-bit, the larger stack frame leaves garbage in `count`, causing the joke-insertion loop to fail its bounds check immediately.
+- **Fix**: Add `cgc_memset(&jokedb, 0, sizeof(jokedb))` after declaration.
+- **Files**: `challenges/CNMP/src/service.c`
+
+### CTTP — uninitialized fd variable
+- **Category**: uninit-memory
+- **Symptom**: All polls fail with broken pipe; service exits immediately
+- **Root Cause**: `int fd;` was declared without initialization. In 32-bit, the value was typically 0 (stdin). In 64-bit, the garbage value causes `FD_SET(fd, ...)` and `cgc_fdwait()` to use a nonsensical file descriptor, so fdwait returns immediately with no readable fds, breaking the main loop.
+- **Fix**: Change to `int fd = 0;`.
+- **Files**: `challenges/CTTP/src/service.c`
+
+### CTTP — cb-replay.py busy-wait performance issue
+- **Category**: test-infra (not a challenge bug)
+- **Symptom**: CTTP polls take 7+ seconds each due to Python busy-wait overhead; many polls time out with `--timeout 15`
+- **Root Cause**: `read_from_proc` used `time.sleep(0)` in a tight loop (100,000+ iterations for 154KB reads), taking 7 seconds per poll purely from Python overhead. The bottleneck was GIL contention between the buffer thread and the main thread.
+- **Root Cause 2**: `_read_len(N)` called `read_from_proc(max(4096, N))` which blocked waiting for 4096 bytes even when only N bytes were needed and already available in the buffer.
+- **Fix**: Replaced list-based `pipe_raw` with `queue.Queue()` + `threading.Event()` for efficient signaling. Changed `read_from_proc` to use `Event.wait()` instead of busy-polling. Changed `_read_len` to call `read_from_proc(N)` (exact size). Added early-return logic for partial reads to maintain compatibility with delimiter-based protocols.
+- **Files**: `tools/cb-replay.py`
+
+### Carbonate, Charter, Corinth, Estadio, HeartThrob — missing polls
+- **Category**: poll-generation (not a challenge bug)
+- **Symptom**: No polls exist in `polls/` directory; challenges not tested
+- **Root Cause**: The poller `machine.py` files use Python 2 syntax and ctypes features not compatible with Python 3. The state machine generators and poll XML files need to be created.
+- **Fix**: Generated 100 polls each using Python 3-compatible `gen_polls.py` wrapper. For Estadio specifically, a shared library `libCROMU_00020.so` is loaded via ctypes for the random number generator; the library must be compiled as a 64-bit shared object.
+- **Files**: `polls/Carbonate/`, `polls/Charter/`, `polls/Corinth/`, `polls/Estadio/`, `polls/HeartThrob/`
