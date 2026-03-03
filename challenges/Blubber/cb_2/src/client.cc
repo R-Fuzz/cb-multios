@@ -156,9 +156,8 @@ int handle_reblub(FILE* rx, FILE* tx, vector* read_blubs)
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    char *secret_page = (char *)secret_page_i;
+    char *secret_page = (char *)CGC_FLAG_PAGE_ADDRESS;
     (void) secret_page;
 
 #ifndef DEBUG

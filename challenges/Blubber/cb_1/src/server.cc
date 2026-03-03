@@ -353,7 +353,6 @@ int run_server(server_state* state)
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
 #ifndef DEBUG
     cgc_fxlat(cgc_stdin, "9an538n9av3;5");
