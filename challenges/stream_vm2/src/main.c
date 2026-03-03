@@ -296,7 +296,8 @@ int cgc_read_inst(int fd, state *machine, inst *cur)
 int main(int cgc_argc, char *cgc_argv[])
 {
   void *x = cgc_frob;
-  cgc_transmit(STDOUT, &x, sizeof(void *), NULL);
+  uint32_t x32 = (uint32_t)(uintptr_t)x;
+  cgc_transmit(STDOUT, &x32, sizeof(uint32_t), NULL);
   if (!cgc_read_header(STDIN))
     return -1;
 
