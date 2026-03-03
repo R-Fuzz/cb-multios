@@ -364,8 +364,6 @@ bool Reauthenticate() {
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
-
     bool is_running = true;
 
     FILE *cb_s_in = cgc_fopen(CLIENT_FD_R, 0);
@@ -373,7 +371,7 @@ extern "C" int main(int secret_page_i,  char *unused[]) {
     unsigned short client_cmd_id = 0;
     int session_timeout = SESSION_TIMEOUT_VAL;
 
-    char *secret_page = (char *)secret_page_i;
+    char *secret_page = (char *)CGC_FLAG_PAGE_ADDRESS;
     (void) secret_page;
     BrcClient::InitServerFd(cb_s_in, cb_s_out);
 

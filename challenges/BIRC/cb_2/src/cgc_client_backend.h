@@ -22,11 +22,12 @@
  */
 #ifndef CLIENT_BACKEND_H_
 #define CLIENT_BACKEND_H_
+#include <cstddef>
 #include "cgc_user.h"
 
 namespace Backend {
 
-void InitDataStores(int secret_page_i);
+void InitDataStores(size_t secret_page_i);
 
 bool CheckIfUserExists(const char *name, unsigned short length);
 bool AddUser(User *user);

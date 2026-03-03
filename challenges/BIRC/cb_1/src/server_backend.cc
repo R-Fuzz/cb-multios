@@ -126,7 +126,7 @@ char GetRandomByte()
     return byte_pool[byte_idx];
 }
 
-void InitDataStores(int secret_page_i) {
+void InitDataStores(size_t secret_page_i) {
     g_secret = (const int *)secret_page_i;
     RegisteredUsers.Append(new User((char *)g_admin_name, sizeof(g_admin_name),
                             (char *)g_admin_name, sizeof(g_admin_name), true));

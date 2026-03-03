@@ -21,6 +21,7 @@
  *
  */
 
+#include <cstddef>
 #include "cgc_cstdlib.h"
 #include "cgc_cstdio.h"
 #include "cgc_cstring.h"
@@ -38,13 +39,11 @@
 #define SERVER_FD_R 6
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
+    size_t secret_page = (size_t)CGC_FLAG_PAGE_ADDRESS;
 
-    Backend::InitDataStores(secret_page_i);
+    Backend::InitDataStores(secret_page);
     FILE *cb_c_in = cgc_fopen(SERVER_FD_R, 0);
     FILE *cb_c_out = cgc_fopen(CLIENT_FD_W, 1);
-    char *secret_page = (char *)secret_page_i;
-    (void) secret_page;
 
     PRINTF("Running server code\n");
     BrcPacket *pkt = new BrcPacket(cb_c_in, cb_c_out);
