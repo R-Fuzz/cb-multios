@@ -44,7 +44,7 @@ int cgc_parseCmd(char* command, char* buffer) {
 		return 0;
 }
 
-int cgc_receiveProgramSize(socket) {
+int cgc_receiveProgramSize(int socket) {
 	char buf[1024] ={0};
 	int bytes_read;
 	int arg_pos;
