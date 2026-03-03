@@ -27,12 +27,23 @@ THE SOFTWARE.
 #ifndef _ASAN_H
 #define _ASAN_H
 
+#ifdef __x86_64__
+/* On 64-bit, pointer comparison uses (unsigned int) truncation in asan.c,
+ * so set ranges to cover the full 32-bit value space (excluding NULL). */
+#define PROGRAMBASE 0x1U
+#define PROGRAMSIZE 0xFFFFFFFEU
+#define DATABASE 1
+#define DATASIZE 1
+#define STACKBASE 0x1U
+#define STACKSIZE 0xFFFFFFFEU
+#else
 #define PROGRAMBASE 0x08048000
 #define PROGRAMSIZE 0x4000
 #define DATABASE 1
 #define DATASIZE 1
 #define STACKBASE 0xBAA8B000
 #define STACKSIZE 0x20000
+#endif
 
 int cgc_validatePtr(void *ptr);
 void cgc_validateRet();
