@@ -30,9 +30,21 @@ struct chunk {
     struct list_node list;
 } __attribute__((packed));
 
+#ifdef __x86_64__
+/* On 64-bit: struct chunk is 24 bytes (header:8 + list_node:16, packed).
+ * A free chunk needs header(8) + next(8) + prev(8) + footer(8) = 32 bytes minimum.
+ * CHUNK_OVERHEAD = 2 * sizeof(cgc_size_t) = 16 bytes.
+ * The 16-byte size class from the 32-bit version leaves 0 bytes for user data
+ * and corrupts memory when list_node pointers are written into a 16-byte chunk.
+ * Use 32 as the minimum size class on 64-bit. */
+static cgc_size_t size_class_sizes[] = {
+    32, 64, 128, 256, 512, 1024, 2048, 4096
+};
+#else
 static cgc_size_t size_class_sizes[] = {
     16, 32, 64, 128, 256, 512, 1024, 2048
 };
+#endif
 
 #define NUM_SIZE_CLASSES (sizeof(size_class_sizes) / sizeof(cgc_size_t))
 

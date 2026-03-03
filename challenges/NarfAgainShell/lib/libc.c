@@ -195,8 +195,10 @@ cgc_strtok(char *s, char d)
     static char *prev = NULL;
     char *token, *ret;
 
-    if (s == NULL && (prev == NULL || cgc_strlen(prev) == 0))
+    if (s == NULL && (prev == NULL || cgc_strlen(prev) == 0)) {
+        prev = NULL;
         return NULL;
+    }
 
     if (prev == NULL || cgc_strlen(prev) == 0)
         prev = s;
@@ -204,8 +206,10 @@ cgc_strtok(char *s, char d)
     while (*prev == d)
         prev++;
 
-    if (cgc_strlen(prev) == 0)
+    if (cgc_strlen(prev) == 0) {
+        prev = NULL;
         return NULL;
+    }
 
     ret = prev;
     if ((token = cgc_strchr(prev, d)) != NULL) {
