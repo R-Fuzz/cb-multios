@@ -499,7 +499,6 @@ void HandleChangeName()
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
     char buf[6], nameBuf[32];
 
