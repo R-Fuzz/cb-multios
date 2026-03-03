@@ -799,20 +799,61 @@ int cgc_vsprintf( char *str, const char *fmt, va_list arg )
     return (character_count);
 }
 
+/* Output buffer: accumulates output across cgc_printf calls to reduce syscalls */
+static char cgc_out_buf[4096];
+static cgc_size_t cgc_out_buf_len = 0;
+
+void cgc_out_flush(void)
+{
+    cgc_size_t tx_count;
+    if (cgc_out_buf_len > 0) {
+        cgc_transmit(STDOUT, cgc_out_buf, cgc_out_buf_len, &tx_count);
+        cgc_out_buf_len = 0;
+    }
+}
+
+/* Append bytes to output buffer (flushing if buffer overflows).
+ * Used by cgc_puts to accumulate string + newline before one final flush. */
+void cgc_out_append(const char *s, cgc_size_t n)
+{
+    cgc_size_t i;
+    for (i = 0; i < n; i++) {
+        cgc_out_buf[cgc_out_buf_len++] = s[i];
+        if (cgc_out_buf_len >= sizeof(cgc_out_buf)) {
+            cgc_out_flush();
+        }
+    }
+}
+
 int cgc_printf( const char *fmt, ... )
 {
     va_list arg;
     int done;
     char large_buff[4096];
-    cgc_size_t tx_count;
+    cgc_size_t i;
 
     va_start( arg, fmt );
 
-   // done = vsprintf(large_buff, fmt, arg);
-   // transmit( STDOUT, large_buff, done, &tx_count );
-    
-    done = cgc_vprintf( fmt, arg );
+    done = cgc_vsprintf(large_buff, fmt, arg);
+
     va_end( arg );
+
+    if (done <= 0)
+        return done;
+
+    /* Accumulate into persistent output buffer */
+    for (i = 0; i < (cgc_size_t)done; i++) {
+        cgc_out_buf[cgc_out_buf_len++] = large_buff[i];
+        if (cgc_out_buf_len >= sizeof(cgc_out_buf)) {
+            cgc_out_flush();
+        }
+    }
+
+    /* Flush on newline or colon (prompts like "Choice: " or "Continue?(y/n):" end with ':'
+     * and must be sent before the binary blocks waiting for input) */
+    if (large_buff[done-1] == '\n' || large_buff[done-1] == ':') {
+        cgc_out_flush();
+    }
 
     return done;
 }

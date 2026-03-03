@@ -337,6 +337,15 @@ char *cgc_strncat ( char *dest, const char *src, cgc_size_t n )
     return(dest);
 }
 
+/* Forward declarations for output buffer functions in new_printf.c */
+void cgc_out_flush(void);
+void cgc_out_append(const char *s, cgc_size_t n);
+
+/* Buffered stdin state (declared here so cgc_flush_input can access it) */
+static char cgc_stdin_buf[512];
+static cgc_size_t cgc_stdin_buf_len = 0;
+static cgc_size_t cgc_stdin_buf_pos = 0;
+
 int cgc_flush_input(int fd) {
     cgc_fd_set read_fds;
     int err;
@@ -344,6 +353,12 @@ int cgc_flush_input(int fd) {
     struct cgc_timeval tv;
     char buffer[1024];
     cgc_size_t rcv_cnt;
+
+    /* Discard any buffered stdin bytes */
+    if (fd == STDIN) {
+        cgc_stdin_buf_len = 0;
+        cgc_stdin_buf_pos = 0;
+    }
 
     while (1)  {
 
@@ -383,24 +398,35 @@ cgc_size_t cgc_getline( char *buffer, cgc_size_t len)  {
 
 }
 
+static int cgc_buffered_getc(char *out)
+{
+    if (cgc_stdin_buf_pos >= cgc_stdin_buf_len) {
+        cgc_size_t rx = 0;
+        /* Flush any pending output before blocking on input */
+        cgc_out_flush();
+        if (cgc_receive(STDIN, cgc_stdin_buf, sizeof(cgc_stdin_buf), &rx) != 0)
+            return -1;
+        if (rx == 0)
+            return -1;
+        cgc_stdin_buf_len = rx;
+        cgc_stdin_buf_pos = 0;
+    }
+    *out = cgc_stdin_buf[cgc_stdin_buf_pos++];
+    return 0;
+}
+
 cgc_size_t cgc_receive_until( char *dst, char delim, cgc_size_t max )
 {
     cgc_size_t len = 0;
-    cgc_size_t rx = 0;
     char c = 0;
 
     while( len < max ) {
         dst[len] = 0x00;
 
-        if ( cgc_receive( STDIN, &c, 1, &rx ) != 0 ) {
+        if ( cgc_buffered_getc(&c) != 0 ) {
             len = 0;
             goto end;
         }
-
-	if (rx == 0) {
-		len = 0;
-		goto end;
-	}
 
         if ( c == delim ) {
             goto end;
@@ -419,7 +445,16 @@ cgc_size_t count=0;
 cgc_size_t remaining = 0;
 cgc_size_t rxbytes=0;
 
+    /* Drain any buffered stdin bytes first */
+    while (cgc_stdin_buf_pos < cgc_stdin_buf_len && count < size) {
+        buffer[count++] = cgc_stdin_buf[cgc_stdin_buf_pos++];
+    }
+
     remaining = size - count;
+
+    /* Flush any pending output before blocking on input */
+    if (remaining > 0)
+        cgc_out_flush();
 
     while(remaining)  {
 
@@ -517,28 +552,15 @@ end:
 
 void cgc_puts( char *t )
 {
-    cgc_size_t size;
-    cgc_size_t total_sent = 0;
-    cgc_size_t len;
-
-    if (!t) {
-       return;
+    /* Append string + newline to output buffer then flush as one unit.
+     * This ensures any accumulated cgc_printf output PLUS the string PLUS newline
+     * are sent in a single cgc_transmit, preventing the Python test framework
+     * from seeing them as separate pipe chunks (which causes extra wait cycles). */
+    if (t) {
+        cgc_out_append(t, cgc_strlen(t));
     }
-
-    len = cgc_strlen(t);
-
-    while (total_sent < len) {
-        if (cgc_transmit(STDOUT, t+total_sent, len-total_sent, &size) != 0) {
-            return;
-        }
-        total_sent += size;
-    }
-    size = 0;
-    while (size != 1) {
-        if (cgc_transmit(STDOUT, "\n", 1, &size) != 0) {
-            return;
-        }
-    }
+    cgc_out_append("\n", 1);
+    cgc_out_flush();
 }
 
 char *cgc_strchr(const char *s, int c) {
@@ -634,21 +656,16 @@ char *cgc_strtok(char *str, const char *delim) {
 
 cgc_ssize_t cgc_write( const void *buf, cgc_size_t count )
 {
-	cgc_size_t size;
-	cgc_size_t total_sent = 0;
-
+	/* Append to output buffer and flush as one unit, ensuring any
+	 * accumulated cgc_printf output and this write go in the same pipe chunk. */
 	if (!buf) {
 		return(0);
 	}
 
-	while (total_sent < count) {
-		if (cgc_transmit(STDOUT, buf+total_sent, count-total_sent, &size) != 0) {
-			return(total_sent);
-		}
-		total_sent += size;
-	}	
+	cgc_out_append((const char *)buf, count);
+	cgc_out_flush();
 
-	return(total_sent);
+	return(count);
 
 }
 
