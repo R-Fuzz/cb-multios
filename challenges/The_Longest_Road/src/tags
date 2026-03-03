@@ -1,0 +1,232 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ACK	../include/cgc_packet.h	50;"	d
+ASSREQ	../include/cgc_packet.h	36;"	d
+ASSRESP	../include/cgc_packet.h	37;"	d
+AUTHCHALREQ	../include/cgc_packet.h	39;"	d
+AUTHCHALRESP	../include/cgc_packet.h	40;"	d
+AUTHREQ	../include/cgc_packet.h	38;"	d
+AUTHRESP	../include/cgc_packet.h	41;"	d
+CONTROL	../include/cgc_packet.h	31;"	d
+CTS	../include/cgc_packet.h	49;"	d
+DATA	../include/cgc_packet.h	33;"	d
+DCDPCE	../include/cgc_packet.h	56;"	d
+DEAUTHREQ	../include/cgc_packet.h	44;"	d
+DEAUTHRESP	../include/cgc_packet.h	45;"	d
+DISREQ	../include/cgc_packet.h	42;"	d
+DISRESP	../include/cgc_packet.h	43;"	d
+ENC_ONE	../include/cgc_packet.h	67;"	d
+ENC_TWO	../include/cgc_packet.h	68;"	d
+ERR_BAD_ENCRYPTION	../include/cgc_packet.h	73;"	d
+ERR_NO_CONNECTION	../include/cgc_packet.h	72;"	d
+ERR_OUT_OF_SEQUENCE	../include/cgc_packet.h	71;"	d
+Enc_Chal	../include/cgc_packet.h	/^} Enc_Chal;$/;"	t	typeref:struct:__anon5
+F32_PRECISION	../lib/printf.c	33;"	d	file:
+FAIL	../include/cgc_math_lib.h	41;"	d
+FAIL	../include/cgc_service.h	30;"	d
+FALSE	../include/cgc_math_lib.h	45;"	d
+GETLEN	../include/cgc_packet.h	57;"	d
+GOOD_DEAUTHRESP	../include/cgc_packet.h	62;"	d
+GOOD_DISRESP	../include/cgc_packet.h	61;"	d
+Game_Stack	../include/cgc_game.h	/^} Game_Stack;$/;"	t	typeref:struct:__anon3
+INPUT	../include/cgc_math_lib.h	49;"	d
+LAST_CHAR_POS	packet.c	/^int LAST_CHAR_POS = 74; \/\/ zero-based last char index$/;"	v
+MAX_CONTENT	../include/cgc_packet.h	75;"	d
+MAX_INT	../include/cgc_math_lib.h	53;"	d
+MAX_PIECES	../include/cgc_game.h	29;"	d
+MAX_WRONG_MOVES	../include/cgc_service.h	33;"	d
+MGMT	../include/cgc_packet.h	32;"	d
+MTH_H_DEFINED	../include/cgc_math_lib.h	27;"	d
+NACK	../include/cgc_packet.h	51;"	d
+NO_ROAD	../include/cgc_game.h	37;"	d
+NXTPCE	../include/cgc_packet.h	58;"	d
+PI	../include/cgc_math_lib.h	51;"	d
+PLCPCE	../include/cgc_packet.h	59;"	d
+Packet	../include/cgc_packet.h	/^} Packet;$/;"	t	typeref:struct:__anon4
+Piece	../include/cgc_game.h	/^} Piece;$/;"	t	typeref:struct:__anon2
+ROAD	../include/cgc_game.h	36;"	d
+RTS	../include/cgc_packet.h	48;"	d
+Road_Link	../include/cgc_game.h	/^} Road_Link;$/;"	t	typeref:struct:__anon1
+SUCCESS	../include/cgc_math_lib.h	42;"	d
+SUCCESS	../include/cgc_service.h	31;"	d
+TEST_LEN	../include/cgc_math_lib.h	55;"	d
+TRUE	../include/cgc_math_lib.h	44;"	d
+UNINITIALIZED	../include/cgc_math_lib.h	47;"	d
+VALID_CHARS	packet.c	/^char *VALID_CHARS = "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_`abcdefghijklmnopqrstuvwxyz";$/;"	v
+__GAME_H__	../include/cgc_game.h	27;"	d
+__PACKET_H__	../include/cgc_packet.h	28;"	d
+__anon1::side	../include/cgc_game.h	/^	char side;  \/\/ 0-3, which side on the target piece this road connects with$/;"	m	struct:__anon1	access:public
+__anon1::target	../include/cgc_game.h	/^	char target; \/\/ number of target piece this connects to$/;"	m	struct:__anon1	access:public
+__anon2::piece_num	../include/cgc_game.h	/^	char piece_num; \/\/ just keeps track of each piece$/;"	m	struct:__anon2	access:public
+__anon2::sides	../include/cgc_game.h	/^	Road_Link sides[4];$/;"	m	struct:__anon2	access:public
+__anon3::stack	../include/cgc_game.h	/^	Piece stack[MAX_PIECES];$/;"	m	struct:__anon3	access:public
+__anon3::top_element	../include/cgc_game.h	/^	int top_element; \/\/ how many pieces in this stack (-1 because zero counting)?$/;"	m	struct:__anon3	access:public
+__anon4::checksum	../include/cgc_packet.h	/^	char checksum; \/\/ 1 byte checksum of rest of packet (5-byte header + 10-byte content)$/;"	m	struct:__anon4	access:public
+__anon4::conn_number	../include/cgc_packet.h	/^	char conn_number; \/\/ incremented after each successful association response (successful assoc)$/;"	m	struct:__anon4	access:public
+__anon4::content	../include/cgc_packet.h	/^	char content[MAX_CONTENT]; \/\/ fixed-length content area$/;"	m	struct:__anon4	access:public
+__anon4::length	../include/cgc_packet.h	/^	char length; \/\/ length of used content area$/;"	m	struct:__anon4	access:public
+__anon4::packet_number	../include/cgc_packet.h	/^	char packet_number; \/\/ DATA packets only. increments current_packet_count_recvd$/;"	m	struct:__anon4	access:public
+__anon4::subtype	../include/cgc_packet.h	/^	char subtype; \/\/ d-q, v-z$/;"	m	struct:__anon4	access:public
+__anon4::type	../include/cgc_packet.h	/^	char type; \/\/ a,b,c$/;"	m	struct:__anon4	access:public
+__anon5::answer	../include/cgc_packet.h	/^	char answer[5];$/;"	m	struct:__anon5	access:public
+__anon5::enc_type	../include/cgc_packet.h	/^	int enc_type;$/;"	m	struct:__anon5	access:public
+__anon5::pending	../include/cgc_packet.h	/^	int pending;$/;"	m	struct:__anon5	access:public
+__service_h__	../include/cgc_service.h	27;"	d
+answer	../include/cgc_packet.h	/^	char answer[5];$/;"	m	struct:__anon5	access:public
+cgc_atof	../lib/stdlib.c	/^double cgc_atof(const char* str)$/;"	f	signature:(const char* str)
+cgc_atoi	../lib/stdlib.c	/^int cgc_atoi(const char* str)$/;"	f	signature:(const char* str)
+cgc_bzero	../lib/stdlib.c	/^void cgc_bzero( void *buff, cgc_size_t len )$/;"	f	signature:( void *buff, cgc_size_t len )
+cgc_calculateCS	packet.c	/^char cgc_calculateCS(char *bytes, int len)$/;"	f	signature:(char *bytes, int len)
+cgc_calloc	../lib/stdlib.c	/^void *cgc_calloc(cgc_size_t count, cgc_size_t size) {$/;"	f	signature:(cgc_size_t count, cgc_size_t size)
+cgc_check_win	../include/cgc_packet.h	/^int cgc_check_win(int);$/;"	p	signature:(int)
+cgc_check_win	packet.c	/^int cgc_check_win(int goal)$/;"	f	signature:(int goal)
+cgc_connect_pieces	../include/cgc_game.h	/^int cgc_connect_pieces(Piece *pieceA, char sideA, Piece *pieceB, char sideB);$/;"	p	signature:(Piece *pieceA, char sideA, Piece *pieceB, char sideB)
+cgc_connect_pieces	game.c	/^int cgc_connect_pieces(Piece *pieceA, char sideA, Piece *pieceB, char sideB)$/;"	f	signature:(Piece *pieceA, char sideA, Piece *pieceB, char sideB)
+cgc_create_random_piece	../include/cgc_game.h	/^int cgc_create_random_piece(Piece *piece);$/;"	p	signature:(Piece *piece)
+cgc_create_random_piece	game.c	/^int cgc_create_random_piece(Piece *piece)$/;"	f	signature:(Piece *piece)
+cgc_current_max_road_len	../include/cgc_game.h	/^extern char cgc_current_max_road_len;$/;"	x
+cgc_current_max_road_len	game.c	/^char cgc_current_max_road_len = 0;$/;"	v
+cgc_decrypt_packet	../include/cgc_packet.h	/^int cgc_decrypt_packet(char *packet, int len, int type);$/;"	p	signature:(char *packet, int len, int type)
+cgc_decrypt_packet	packet.c	/^int cgc_decrypt_packet(char *data, int len, int type)$/;"	f	signature:(char *data, int len, int type)
+cgc_discard_piece	../include/cgc_game.h	/^int cgc_discard_piece();$/;"	p	signature:()
+cgc_discard_piece	game.c	/^int cgc_discard_piece()$/;"	f
+cgc_encrypt_data	../include/cgc_packet.h	/^int cgc_encrypt_data(char *packet, int len, int type);$/;"	p	signature:(char *packet, int len, int type)
+cgc_encrypt_data	packet.c	/^int cgc_encrypt_data(char *data, int len, int type)$/;"	f	signature:(char *data, int len, int type)
+cgc_float_to_str	../lib/printf.c	/^void cgc_float_to_str( double val, char *buf )$/;"	f	signature:( double val, char *buf )
+cgc_floor	../lib/mymath.c	/^double cgc_floor( double val )$/;"	f	signature:( double val )
+cgc_free	../lib/stdlib.c	/^void cgc_free(void *ptr) {$/;"	f	signature:(void *ptr)
+cgc_game.h	../include/cgc_game.h	1;"	F
+cgc_getNextPieceNum	game.c	/^int cgc_getNextPieceNum()$/;"	f
+cgc_get_checksum	../include/cgc_packet.h	/^char cgc_get_checksum(Packet *pkt);$/;"	p	signature:(Packet *pkt)
+cgc_get_checksum	packet.c	/^char cgc_get_checksum(Packet *pkt)$/;"	f	signature:(Packet *pkt)
+cgc_get_max_road_len	../include/cgc_game.h	/^int cgc_get_max_road_len();$/;"	p	signature:()
+cgc_get_max_road_len	game.c	/^int cgc_get_max_road_len()$/;"	f
+cgc_get_piece	../include/cgc_game.h	/^int cgc_get_piece(char pce);$/;"	p	signature:(char pce)
+cgc_get_piece	game.c	/^int cgc_get_piece(char pce_num)$/;"	f	signature:(char pce_num)
+cgc_handle_auth_challenge_resp	../include/cgc_packet.h	/^int cgc_handle_auth_challenge_resp(char* answer);$/;"	p	signature:(char* answer)
+cgc_handle_auth_challenge_resp	packet.c	/^int cgc_handle_auth_challenge_resp(char *answer)$/;"	f	signature:(char *answer)
+cgc_handle_deauth_req	../include/cgc_packet.h	/^int cgc_handle_deauth_req(char reason);$/;"	p	signature:(char reason)
+cgc_handle_deauth_req	packet.c	/^int cgc_handle_deauth_req(char reason)$/;"	f	signature:(char reason)
+cgc_handle_disass_req	../include/cgc_packet.h	/^int cgc_handle_disass_req(char reason);$/;"	p	signature:(char reason)
+cgc_handle_disass_req	packet.c	/^int cgc_handle_disass_req(char reason)$/;"	f	signature:(char reason)
+cgc_heap_manager	../lib/stdlib.c	/^heap_metadata *cgc_heap_manager = NULL;$/;"	v
+cgc_int_to_hex	../lib/printf.c	/^void cgc_int_to_hex( unsigned int val, char *buf )$/;"	f	signature:( unsigned int val, char *buf )
+cgc_int_to_str	../lib/printf.c	/^void cgc_int_to_str( int val, char *buf )$/;"	f	signature:( int val, char *buf )
+cgc_isTopPiecePlaced	../include/cgc_game.h	/^int cgc_isTopPiecePlaced();$/;"	p	signature:()
+cgc_isTopPiecePlaced	game.c	/^int cgc_isTopPiecePlaced()$/;"	f
+cgc_isalnum	../lib/stdlib.c	/^int cgc_isalnum( int c )$/;"	f	signature:( int c )
+cgc_isalpha	../lib/stdlib.c	/^int cgc_isalpha( int c )$/;"	f	signature:( int c )
+cgc_isdigit	../lib/stdlib.c	/^int cgc_isdigit( int c )$/;"	f	signature:( int c )
+cgc_isinf	../lib/stdlib.c	/^int cgc_isinf( double val )$/;"	f	signature:( double val )
+cgc_islower	../lib/stdlib.c	/^int cgc_islower( int c )$/;"	f	signature:( int c )
+cgc_isnan	../lib/stdlib.c	/^int cgc_isnan( double val )$/;"	f	signature:( double val )
+cgc_isspace	../lib/stdlib.c	/^int cgc_isspace( int c )$/;"	f	signature:( int c )
+cgc_isupper	../lib/stdlib.c	/^int cgc_isupper( int c )$/;"	f	signature:( int c )
+cgc_itoa	../lib/stdlib.c	/^cgc_size_t cgc_itoa( char *out, cgc_size_t val, cgc_size_t max )$/;"	f	signature:( char *out, cgc_size_t val, cgc_size_t max )
+cgc_locate_char	packet.c	/^int cgc_locate_char(char c)$/;"	f	signature:(char c)
+cgc_malloc	../lib/stdlib.c	/^void *cgc_malloc(cgc_size_t size) {$/;"	f	signature:(cgc_size_t size)
+cgc_math_lib.h	../include/cgc_math_lib.h	1;"	F
+cgc_memcpy	../lib/stdlib.c	/^int cgc_memcpy( void *dest, void *src, cgc_size_t n )$/;"	f	signature:( void *dest, void *src, cgc_size_t n )
+cgc_memset	../lib/stdlib.c	/^void *cgc_memset(void *s, int c, cgc_size_t n)$/;"	f	signature:(void *s, int c, cgc_size_t n)
+cgc_packet.h	../include/cgc_packet.h	1;"	F
+cgc_packet_handler	../include/cgc_packet.h	/^int cgc_packet_handler(Packet* pkt);\/\/, Game* game);$/;"	p	signature:(Packet* pkt)
+cgc_packet_handler	packet.c	/^int cgc_packet_handler(Packet* pkt)\/\/, Game *game)$/;"	f	signature:(Packet* pkt)
+cgc_piece_to_pkt	../include/cgc_game.h	/^void cgc_piece_to_pkt(Piece *piece, char* str);$/;"	p	signature:(Piece *piece, char* str)
+cgc_piece_to_pkt	game.c	/^void cgc_piece_to_pkt(Piece *piece, char* str)$/;"	f	signature:(Piece *piece, char* str)
+cgc_populate_packet	../include/cgc_packet.h	/^int cgc_populate_packet(Packet *pkt, char* data, int len);$/;"	p	signature:(Packet *pkt, char* data, int len)
+cgc_populate_packet	packet.c	/^int cgc_populate_packet(Packet *pkt, char* data, int len)$/;"	f	signature:(Packet *pkt, char* data, int len)
+cgc_prev_str	../lib/stdlib.c	/^char *cgc_prev_str = NULL;$/;"	v
+cgc_prev_str_len	../lib/stdlib.c	/^unsigned int cgc_prev_str_len = 0;$/;"	v
+cgc_prev_str_ptr	../lib/stdlib.c	/^char *cgc_prev_str_ptr = NULL;$/;"	v
+cgc_printf	../lib/printf.c	/^int cgc_printf( const char *fmt, ... )$/;"	f	signature:( const char *fmt, ... )
+cgc_prng	../lib/prng.c	/^uint64_t cgc_prng()$/;"	f
+cgc_push_piece	../include/cgc_game.h	/^void cgc_push_piece(Piece *piece);$/;"	p	signature:(Piece *piece)
+cgc_push_piece	game.c	/^void cgc_push_piece(Piece *piece)$/;"	f	signature:(Piece *piece)
+cgc_putc	../lib/printf.c	/^int cgc_putc( int c )$/;"	f	signature:( int c )
+cgc_puts	../lib/stdlib.c	/^void cgc_puts( char *t )$/;"	f	signature:( char *t )
+cgc_random_in_range	../lib/prng.c	/^uint32_t cgc_random_in_range(uint32_t min, uint32_t max)$/;"	f	signature:(uint32_t min, uint32_t max)
+cgc_receive_until	../lib/stdlib.c	/^cgc_size_t cgc_receive_until( char *dst, char delim, cgc_size_t max )$/;"	f	signature:( char *dst, char delim, cgc_size_t max )
+cgc_round	../lib/mymath.c	/^double cgc_round( double val, double n )$/;"	f	signature:( double val, double n )
+cgc_round_away_from_zero	../lib/mymath.c	/^double cgc_round_away_from_zero( double val )$/;"	f	signature:( double val )
+cgc_seed_prng	../include/cgc_math_lib.h	/^int cgc_seed_prng();$/;"	p	signature:()
+cgc_seed_prng	math_lib.c	/^int cgc_seed_prng()$/;"	f
+cgc_send_ack	../include/cgc_packet.h	/^void cgc_send_ack(char pkt_num);$/;"	p	signature:(char pkt_num)
+cgc_send_ack	packet.c	/^void cgc_send_ack(char pkt_num)$/;"	f	signature:(char pkt_num)
+cgc_send_assoc_response	../include/cgc_packet.h	/^void cgc_send_assoc_response(char req_conn);$/;"	p	signature:(char req_conn)
+cgc_send_assoc_response	packet.c	/^void cgc_send_assoc_response(char req_conn)$/;"	f	signature:(char req_conn)
+cgc_send_auth_challenge	../include/cgc_packet.h	/^void cgc_send_auth_challenge(int enc);$/;"	p	signature:(int enc)
+cgc_send_auth_challenge	packet.c	/^void cgc_send_auth_challenge(int enc)$/;"	f	signature:(int enc)
+cgc_send_auth_response	../include/cgc_packet.h	/^void cgc_send_auth_response(char* req_enc);$/;"	p	signature:(char* req_enc)
+cgc_send_auth_response	packet.c	/^void cgc_send_auth_response(char* req_enc)$/;"	f	signature:(char* req_enc)
+cgc_send_nack	../include/cgc_packet.h	/^void cgc_send_nack(char pktnum, int reason);$/;"	p	signature:(char pktnum, int reason)
+cgc_send_nack	packet.c	/^void cgc_send_nack(char pktnum, int reason)$/;"	f	signature:(char pktnum, int reason)
+cgc_send_packet	../include/cgc_packet.h	/^void cgc_send_packet(Packet *pkt);$/;"	p	signature:(Packet *pkt)
+cgc_send_packet	packet.c	/^void cgc_send_packet(Packet *pkt)$/;"	f	signature:(Packet *pkt)
+cgc_send_packet_new	../include/cgc_packet.h	/^void cgc_send_packet_new(Packet *pkt, int data_len);$/;"	p	signature:(Packet *pkt, int data_len)
+cgc_send_packet_new	packet.c	/^void cgc_send_packet_new(Packet *pkt, int len)$/;"	f	signature:(Packet *pkt, int len)
+cgc_service.h	../include/cgc_service.h	1;"	F
+cgc_set_checksum	../include/cgc_packet.h	/^void cgc_set_checksum(Packet *pkt); \/\/ pointer to packet and the number of bytes to include in the checksum calculation$/;"	p	signature:(Packet *pkt)
+cgc_set_checksum	packet.c	/^void cgc_set_checksum(Packet *pkt)$/;"	f	signature:(Packet *pkt)
+cgc_sprng	../lib/prng.c	/^void cgc_sprng(uint64_t seed)$/;"	f	signature:(uint64_t seed)
+cgc_strcat	../lib/stdlib.c	/^cgc_size_t cgc_strcat( char *dest, char*src )$/;"	f	signature:( char *dest, char*src )
+cgc_strchr	../lib/stdlib.c	/^char *cgc_strchr(const char *s, int c) {$/;"	f	signature:(const char *s, int c)
+cgc_strcmp	../lib/stdlib.c	/^int cgc_strcmp( const char *s1, const char *s2 )$/;"	f	signature:( const char *s1, const char *s2 )
+cgc_strcpy	../lib/stdlib.c	/^char *cgc_strcpy( char *dest, char *src )$/;"	f	signature:( char *dest, char *src )
+cgc_strdup	../lib/stdlib.c	/^char *cgc_strdup(char *s) $/;"	f	signature:(char *s)
+cgc_strlen	../lib/stdlib.c	/^cgc_size_t cgc_strlen( char * str )$/;"	f	signature:( char * str )
+cgc_strncat	../lib/stdlib.c	/^char *cgc_strncat ( char *dest, const char *src, cgc_size_t n )$/;"	f	signature:( char *dest, const char *src, cgc_size_t n )
+cgc_strncpy	../lib/stdlib.c	/^char *cgc_strncpy( char *dest, const char *src, cgc_size_t n )$/;"	f	signature:( char *dest, const char *src, cgc_size_t n )
+cgc_strtok	../lib/stdlib.c	/^char *cgc_strtok(char *str, const char *delim) {$/;"	f	signature:(char *str, const char *delim)
+cgc_token	../lib/stdlib.c	/^char *cgc_token = NULL;$/;"	v
+cgc_validate_packet	../include/cgc_packet.h	/^int cgc_validate_packet(Packet *pkt);$/;"	p	signature:(Packet *pkt)
+cgc_validate_packet	packet.c	/^int cgc_validate_packet(Packet *pkt)$/;"	f	signature:(Packet *pkt)
+cgc_vprintf	../lib/printf.c	/^int cgc_vprintf( const char *fmt, va_list arg )$/;"	f	signature:( const char *fmt, va_list arg )
+cgc_write	../lib/stdlib.c	/^cgc_ssize_t cgc_write( const void *buf, cgc_size_t count )$/;"	f	signature:( const void *buf, cgc_size_t count )
+checksum	../include/cgc_packet.h	/^	char checksum; \/\/ 1 byte checksum of rest of packet (5-byte header + 10-byte content)$/;"	m	struct:__anon4	access:public
+conn_number	../include/cgc_packet.h	/^	char conn_number; \/\/ incremented after each successful association response (successful assoc)$/;"	m	struct:__anon4	access:public
+content	../include/cgc_packet.h	/^	char content[MAX_CONTENT]; \/\/ fixed-length content area$/;"	m	struct:__anon4	access:public
+current_connection_number	../include/cgc_packet.h	/^int current_connection_number;$/;"	v
+current_encryption	../include/cgc_packet.h	/^int current_encryption;$/;"	v
+current_packet_count_recvd	../include/cgc_packet.h	/^int current_packet_count_recvd; \/\/ last incoming packet number$/;"	v
+current_packet_count_sent	../include/cgc_packet.h	/^int current_packet_count_sent;  \/\/ last outgoing packet number$/;"	v
+debug_print	../include/cgc_math_lib.h	36;"	d
+debug_print	../include/cgc_math_lib.h	38;"	d
+enc_chal	../include/cgc_packet.h	/^Enc_Chal enc_chal;$/;"	v
+enc_type	../include/cgc_packet.h	/^	int enc_type;$/;"	m	struct:__anon5	access:public
+encryption_confirmed	../include/cgc_packet.h	/^int encryption_confirmed; \/\/ set to TRUE after AUTHCHALRESP is correctly received$/;"	v
+game.c	game.c	1;"	F
+game_stack	../include/cgc_game.h	/^Game_Stack game_stack;$/;"	v
+goal_len	../include/cgc_game.h	/^extern int goal_len; \/\/ length the user is trying to reach$/;"	x
+goal_len	service.c	/^int goal_len = 9; \/\/ set target length to win game$/;"	v
+last_connection_number	../include/cgc_packet.h	/^int last_connection_number;$/;"	v
+length	../include/cgc_packet.h	/^	char length; \/\/ length of used content area$/;"	m	struct:__anon4	access:public
+main	service.c	/^int main(int cgc_argc, char *cgc_argv[])$/;"	f	signature:(int cgc_argc, char *cgc_argv[])
+math_lib.c	math_lib.c	1;"	F
+mymath.c	../lib/mymath.c	1;"	F
+offset	packet.c	/^int offset = 3;$/;"	v
+packet.c	packet.c	1;"	F
+packet_number	../include/cgc_packet.h	/^	char packet_number; \/\/ DATA packets only. increments current_packet_count_recvd$/;"	m	struct:__anon4	access:public
+pending	../include/cgc_packet.h	/^	int pending;$/;"	m	struct:__anon5	access:public
+piece_num	../include/cgc_game.h	/^	char piece_num; \/\/ just keeps track of each piece$/;"	m	struct:__anon2	access:public
+pop_piece	../include/cgc_game.h	/^void pop_piece(Piece *piece);$/;"	p	signature:(Piece *piece)
+position	../lib/prng.c	/^int position;$/;"	v
+print_packet	../include/cgc_packet.h	/^void print_packet(Packet *pkt);$/;"	p	signature:(Packet *pkt)
+print_status	../include/cgc_packet.h	/^void print_status();$/;"	p	signature:()
+printf.c	../lib/printf.c	1;"	F
+prng.c	../lib/prng.c	1;"	F
+seed_crypt	../include/cgc_packet.h	/^int seed_crypt;$/;"	v
+seed_length	../include/cgc_packet.h	/^int seed_length;$/;"	v
+service.c	service.c	1;"	F
+side	../include/cgc_game.h	/^	char side;  \/\/ 0-3, which side on the target piece this road connects with$/;"	m	struct:__anon1	access:public
+sides	../include/cgc_game.h	/^	Road_Link sides[4];$/;"	m	struct:__anon2	access:public
+stack	../include/cgc_game.h	/^	Piece stack[MAX_PIECES];$/;"	m	struct:__anon3	access:public
+state	../lib/prng.c	/^uint64_t state[16];$/;"	v
+stdlib.c	../lib/stdlib.c	1;"	F
+subtype	../include/cgc_packet.h	/^	char subtype; \/\/ d-q, v-z$/;"	m	struct:__anon4	access:public
+target	../include/cgc_game.h	/^	char target; \/\/ number of target piece this connects to$/;"	m	struct:__anon1	access:public
+top_element	../include/cgc_game.h	/^	int top_element; \/\/ how many pieces in this stack (-1 because zero counting)?$/;"	m	struct:__anon3	access:public
+type	../include/cgc_packet.h	/^	char type; \/\/ a,b,c$/;"	m	struct:__anon4	access:public
