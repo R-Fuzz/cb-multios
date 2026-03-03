@@ -13,8 +13,13 @@ typedef unsigned int uint32_t;
 typedef unsigned long long int uint64_t;
 typedef unsigned long long int uintmax_t;
 
-typedef int intptr_t;
+#ifdef __x86_64__
+typedef long intptr_t;              // 64-bit: long is 64-bit
+typedef unsigned long uintptr_t;
+#else
+typedef int intptr_t;               // 32-bit: int is 32-bit
 typedef unsigned int uintptr_t;
+#endif
 
 /* Minimum of signed integral types.  */
 #define INT8_MIN       (-128)

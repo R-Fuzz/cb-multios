@@ -1192,7 +1192,6 @@ void check_seed()
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
     VC VentureCalc(cgc_stdin, cgc_stdout);
 
