@@ -265,7 +265,7 @@ void cgc_main_loop(pDataStruct workingData){
 		tempNum = 0;
 		cmd = 100;
 
-		for (i=0;i<sizeof(commandList)/4;i++){
+		for (i=0;i<sizeof(commandList)/sizeof(commandList[0]);i++){
 			if (cgc_strcmp(commandList[i],arg[0]) == 0 ){
 				cmd = i;
 			}
@@ -274,7 +274,7 @@ void cgc_main_loop(pDataStruct workingData){
 		{
 			case 0x0 : //set
 				cmd = 100;
-				for (i=0;i<sizeof(setList)/4;i++){
+				for (i=0;i<sizeof(setList)/sizeof(setList[0]);i++){
 					if (cgc_strcmp(setList[i],arg[1]) == 0){
 						cmd = i;
 					}
@@ -315,7 +315,7 @@ void cgc_main_loop(pDataStruct workingData){
 						break;
 
 					case 3 : //set help
-						cgc_print_help(setList,(sizeof(setList)/4));
+						cgc_print_help(setList,(sizeof(setList)/sizeof(setList[0])));
 						break;//end set help
 
 					default :
@@ -327,7 +327,7 @@ void cgc_main_loop(pDataStruct workingData){
 
 			case 1 ://get
 				cmd = 100;
-				for (i=0;i<sizeof(getList)/4;i++){
+				for (i=0;i<sizeof(getList)/sizeof(getList[0]);i++){
 					if (cgc_strcmp(getList[i],arg[1]) == 0){
 						cmd = i;
 					}
@@ -354,7 +354,7 @@ void cgc_main_loop(pDataStruct workingData){
 						break;//end get workingDir
 
 					case 4 : //get help
-						cgc_print_help(getList,(sizeof(getList)/4));
+						cgc_print_help(getList,(sizeof(getList)/sizeof(getList[0])));
 						break;//end get help
 
 					case 5 : //get userlist
@@ -387,7 +387,7 @@ void cgc_main_loop(pDataStruct workingData){
 
 			case 2 ://add
 				cmd = 100;
-				for (i=0;i<sizeof(addList)/4;i++){
+				for (i=0;i<sizeof(addList)/sizeof(addList[0]);i++){
 					if ( cgc_strcmp(addList[i],arg[1]) == 0 ){
 						cmd = i;
 					}
@@ -552,7 +552,7 @@ void cgc_main_loop(pDataStruct workingData){
 						break;//end add appendfile
 
 					case 7 : //add help
-						cgc_print_help(addList, (sizeof(addList)/4));	
+						cgc_print_help(addList, (sizeof(addList)/sizeof(addList[0])));	
 						break;//end add help
 
 					default :
@@ -562,7 +562,7 @@ void cgc_main_loop(pDataStruct workingData){
 				break;//end add
 			case 3 ://delete 	
 				cmd = 100;
-				for (i=0;i<sizeof(deleteList)/4;i++){
+				for (i=0;i<sizeof(deleteList)/sizeof(deleteList[0]);i++){
 					if ( cgc_strcmp(deleteList[i],arg[1]) == 0 ){
 						cmd = i;
 					}
@@ -701,11 +701,11 @@ void cgc_main_loop(pDataStruct workingData){
 						break;//end delete file 
 
 					case 7 : //delete help
-						cgc_print_help(deleteList, (sizeof(deleteList)/4));	
+						cgc_print_help(deleteList, (sizeof(deleteList)/sizeof(deleteList[0])));	
 						break;//end delete help
 
 					default:
-						cgc_print_help(deleteList, (sizeof(deleteList)/4));	
+						cgc_print_help(deleteList, (sizeof(deleteList)/sizeof(deleteList[0])));	
 						//break;//end delete help
 
 				}
@@ -718,7 +718,7 @@ void cgc_main_loop(pDataStruct workingData){
 				break;
 
 			case 5 ://help
-				cgc_print_help(commandList, (sizeof(commandList)/4));
+				cgc_print_help(commandList, (sizeof(commandList)/sizeof(commandList[0])));
 				break;
 			case 6 ://ls
 				cgc_print_working_dir(workingData);
@@ -769,7 +769,7 @@ void cgc_main_loop(pDataStruct workingData){
 
 			default :
 				cgc_printf("Invalid command @s\n",arg[0]);
-				cgc_print_help(commandList, (sizeof(commandList)/4));
+				cgc_print_help(commandList, (sizeof(commandList)/sizeof(commandList[0])));
 				
 		}
 	}

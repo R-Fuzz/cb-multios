@@ -664,7 +664,7 @@ void cgc_str_of_path(char *path, pDataStruct workingData, pNode end){
 		size = MAXPATH-1;
 		cgc_puts("Path exceeds max path size and has been truncated");
 	}
-	strncpy(path, newPath, size );
+	cgc_strncpy(path, newPath, size );
 #endif
 #ifndef PATCHED
 	cgc_strcpy(path, newPath );	
