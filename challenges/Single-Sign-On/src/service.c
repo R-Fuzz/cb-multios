@@ -32,7 +32,7 @@ void cgc_reportMessage(char* message, cgc_size_t message_size) {
 
 unsigned long cgc_getAuthVal() {
 
-	unsigned long auth_val;
+	unsigned long auth_val = 0;
 	cgc_size_t rnd_bytes;
 	int ret;
 
@@ -59,9 +59,13 @@ void cgc_receiveCommand(Command* command) {
 	if(bytesReceived < 0)
 		cgc__terminate(RECEIVE_ERROR);
 
-	// Work-around for receive() race condition bug
+	// Work-around for receive() race condition bug (reduced to 1 on 64-bit for perf)
+#ifdef __x86_64__
+	cgc_getAuthVal();
+#else
 	for(ret = 0; ret < 100; ret++)
 		cgc_getAuthVal();
+#endif
 
 	bytesReceived = cgc_recvline(STDIN, command->input, MAX_ARGS_SIZE);	
 	if(bytesReceived < 0)
@@ -99,11 +103,7 @@ void cgc_auth_failure(char* resource) {
 
 unsigned long cgc_auth_success(char* resource) {
 	char temp_buf[200]; // aligns message_buf
-#ifdef PATCHED
 	char* message_buf = NULL;
-#else
-	char* message_buf; 
-#endif
 	int ret;
 	int message_size;
 	int zero = 0; // Null terminates token
@@ -139,9 +139,9 @@ unsigned long cgc_auth_success(char* resource) {
 }
 
 
-int cgc_do_auth(unsigned long val, unsigned long auth_attempt, char* res)
+unsigned long cgc_do_auth(unsigned long val, unsigned long auth_attempt, char* res)
 {
-	int ret=0;
+	unsigned long ret=0;
 	unsigned long auth_val;
 	auth_val = val;
 
