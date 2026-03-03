@@ -594,9 +594,8 @@ void cgc_setBullets() {
 }
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    void *secret_page = (void *)secret_page_i;
+    void *secret_page = (void *)CGC_FLAG_PAGE_ADDRESS;
 
     (void) secret_page;
     
