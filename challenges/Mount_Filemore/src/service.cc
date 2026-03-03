@@ -44,9 +44,8 @@ char *FillBuffer(const char *secret_page, const unsigned int num_bytes)
 }
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    char *secret_page = (char *)secret_page_i;
+    char *secret_page = (char *)CGC_FLAG_PAGE_ADDRESS;
     (void) secret_page;
     /* If you want to obfuscate input/output, uncomment and change */
     cgc_fxlat(cgc_stdin, "2281771");
