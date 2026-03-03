@@ -1272,7 +1272,6 @@ void cgc_query_menu( void )
 }
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
 
 	int value = 0;
