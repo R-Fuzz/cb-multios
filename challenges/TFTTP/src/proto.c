@@ -10,7 +10,7 @@ int cgc_recvmsg(int fd, uint8_t *data, cgc_size_t maxsize, cgc_size_t minsize) {
         return -3;
     if ((res = cgc_recv(fd, (char *)data, sizeof(tfttp_hdr))) != sizeof(tfttp_hdr))
         return res;
-    size = *(cgc_size_t*)data;
+    size = *(uint32_t*)data;
     if (size > maxsize || size < minsize)
         return -1;
     if ((res = cgc_recv(fd, (char *)data+sizeof(tfttp_hdr), size)) != size)

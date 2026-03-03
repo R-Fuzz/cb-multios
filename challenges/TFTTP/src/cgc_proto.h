@@ -31,7 +31,7 @@ enum pkttype {
 };
 
 typedef struct tfttp_hdr {
-    cgc_size_t size; //size of trailing data
+    uint32_t size; //size of trailing data (fixed to 32-bit for wire protocol)
     enum pkttype code;
 } tfttp_hdr;
 
