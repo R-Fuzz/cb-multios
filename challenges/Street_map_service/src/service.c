@@ -50,5 +50,16 @@ int main(int cgc_argc, char *cgc_argv[]){
 	cgc_puts("This is Mapper.");
 	cgc_prompt_loop(thisMap, turnList);
 
+	/* Consume the extra 0\n sent by the test generator after exit.
+	 * The poll generator's finish() node is always called at walk() end,
+	 * but may also be invoked via graph edge traversal, causing it to
+	 * execute twice and send two 0\n inputs. The prompt loop only reads
+	 * one; drain the second here to prevent a broken pipe write failure. */
+	{
+		char drain[4];
+		cgc_size_t rx;
+		cgc_receive(STDIN, drain, sizeof(drain), &rx);
+	}
+
 	return 1;
 }
