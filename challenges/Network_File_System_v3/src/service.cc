@@ -42,7 +42,6 @@ extern "C"
 #define PAGE_SIZE	(4096)
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
 	CTimeGen *pTimeGen;
 
