@@ -178,7 +178,7 @@ static void test()
         cgc_printf("Invalid search string\n");
     if (nfa == NULL)
         cgc_printf("Bad rpn\n");
-    debug_state(nfa);
+    cgc_debug_state(nfa);
     cgc_printf("trex = %s\n", trex);
     cgc_printf("rpn = %s\n", rpn);
     cgc_printf("Test string = %s\n", test_string);

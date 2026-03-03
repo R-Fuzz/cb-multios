@@ -16,6 +16,8 @@ struct state {
 
 void init_regex();
 void clear_regex();
+void cgc_init_trex();
+void cgc_clear_trex();
 state_t *cgc_create_state(unsigned char input);
 state_t *cgc_op_concat(state_t *s1, state_t *s2);
 state_t *cgc_op_union(state_t *s1, state_t *s2);
