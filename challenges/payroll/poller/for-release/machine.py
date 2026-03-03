@@ -86,14 +86,14 @@ class TimecardPollGenerator(Actions):
             minutes = 0
             hours += 1
         if (day == "saturday" or day== "sunday"):
-            paycheck.overtimehours += hours + (paycheck.overtimeminutes + minutes) / 60
+            paycheck.overtimehours += hours + (paycheck.overtimeminutes + minutes) // 60
             paycheck.overtimeminutes = (paycheck.overtimeminutes + minutes) % 60
         elif (hours < 8):
-            paycheck.standardhours += (hours) + (paycheck.standardminutes + minutes) / 60
+            paycheck.standardhours += (hours) + (paycheck.standardminutes + minutes) // 60
             paycheck.standardminutes = (paycheck.standardminutes + minutes) % 60
         else:
             paycheck.standardhours += 8
-            paycheck.overtimehours += hours - 8 + (paycheck.overtimeminutes + minutes) / 60
+            paycheck.overtimehours += hours - 8 + (paycheck.overtimeminutes + minutes) // 60
             paycheck.overtimeminutes = (paycheck.overtimeminutes + minutes) % 60
 
     def loghours(self):
