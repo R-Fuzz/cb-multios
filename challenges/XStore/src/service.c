@@ -690,11 +690,10 @@ void cgc_check_seed()
 }
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    void *secret_page = (void *)secret_page_i;
+    void *secret_page = (void *)CGC_FLAG_PAGE_ADDRESS;
     uint64_t command;
-    cgc_size_t size;
+    uint32_t size;
     uint8_t debug = 0;
 
     cgc_g_ctx = cgc_xpk_init(1024);
@@ -707,7 +706,7 @@ int main(int secret_page_i,  char *unused[]) {
         cgc_fflush(cgc_stdout);
         if (cgc_fread(&command, sizeof(uint64_t), cgc_stdin) != sizeof(uint64_t))
             break;
-        if (cgc_fread(&size, sizeof(cgc_size_t), cgc_stdin) != sizeof(cgc_size_t))
+        if (cgc_fread(&size, sizeof(uint32_t), cgc_stdin) != sizeof(uint32_t))
             break;
         if (size > MAX_DATA_LEN)
         {
