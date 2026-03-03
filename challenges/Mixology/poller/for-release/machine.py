@@ -113,7 +113,7 @@ class Mixology(Actions):
 	def mix_good_sample(self):
 		if self._check_decrement_sample_limit_write_quit(self.s_mix_k):
 			sample_num = self._random_prepd_sample
-			s = string.uppercase + string.lowercase + string.digits
+			s = string.ascii_uppercase + string.ascii_lowercase + string.digits
 			new_name = "".join([s[random.randrange(0, len(s))] for i in range(0, random.randint(3, 120))])
 			self._mix_arb_good_sample(sample_num, new_name)
 		else:

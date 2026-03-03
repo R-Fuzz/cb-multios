@@ -34,17 +34,23 @@ import math
 import datetime
 
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'narfpylib.zip'))
+# Use system jinja2 if available, otherwise skip (only needed for generate_code())
+try:
+    from jinja2 import Template as _JinjaTemplate
+    _jinja_available = True
+except ImportError:
+    _jinja_available = False
 __author__ = 'scsi'
 
 CURDIR = os.path.dirname(__file__)
 BASEPATH = os.path.abspath(os.path.join(CURDIR, '../../'))
-BUILD_DIR = os.path.join(BASEPATH, '../../build')
+BUILD_DIR = os.path.join(BASEPATH, '../../build64')
+if not os.path.exists(os.path.join(BUILD_DIR, 'challenges', 'Mixology', 'libNRFIN_00007.so')):
+    BUILD_DIR = os.path.join(BASEPATH, '../../build')
 LIBDIR = os.path.join(BASEPATH, 'lib')
 
 
 DATADIR = os.path.join(BASEPATH, "support", 'data')
-from jinja2 import Template
 
 H_TMPL = """
 /*
@@ -91,6 +97,21 @@ static chem_formula_t chem_formulas[N_FORMULAS] = {
 
 
 
+def get_compounds_from_header(libdir):
+	"""Read compound list directly from pre-compiled libcompound.h to ensure
+	consistency with the compiled binary (Python 2/3 random differs)."""
+	import re
+	header_path = os.path.join(libdir, 'cgc_libcompound.h')
+	compounds = []
+	pattern = re.compile(r'\{\s*"([^"]*)",\s*([\d.]+)\s*\}')
+	with open(header_path, 'r') as f:
+		for line in f:
+			m = pattern.search(line)
+			if m:
+				compounds.append((m.group(1), float(m.group(2))))
+	return compounds
+
+
 def get_compounds(sample_size, over_percentage):
 	f = open(os.path.join(DATADIR, 'comps_strip'))
 	lines = [x.replace('\\', '').replace(',', '') for x in map(str.strip, f.readlines())]
@@ -120,10 +141,15 @@ class MixologyCodeGen(object):
 	mix_sample_sz = 25
 
 
-	compounds_and_weights = get_compounds(sample_size, over_percentage)
+	# Use the pre-compiled header to get the exact same compound list as the binary.
+	# Python 2 and Python 3 produce different random.sample results with the same seed,
+	# so regenerating at runtime produces a different list than what was compiled.
+	compounds_and_weights = get_compounds_from_header(LIBDIR)
 	compound_list = [c for c, w in compounds_and_weights]
 
 	mix = ctypes.cdll.LoadLibrary(os.path.join(BUILD_DIR, "challenges", "Mixology",  "libNRFIN_00007.so"))
+	# Initialize the custom malloc heap before any calls
+	mix.cgc_malloc_init()
 
 
 	class compounds_sample_t(ctypes.Structure):
@@ -132,6 +158,7 @@ class MixologyCodeGen(object):
 
 	sample_compounds = mix.cgc_sample_compounds
 	sample_compounds.restype = ctypes.POINTER(compounds_sample_t)
+	sample_compounds.argtypes = [ctypes.c_char_p, ctypes.c_ulong]
 
 	zoom_buf = mix.cgc_zoom_buf
 	zoom_buf.restype = ctypes.c_char_p
@@ -157,8 +184,8 @@ class MixologyCodeGen(object):
 
 
 	def _arb_sample_zoom(self, sample_seed, sample_sz):
-
-
+		if isinstance(sample_seed, str):
+			sample_seed = sample_seed.encode('latin-1')
 
 		x = self.sample_compounds(sample_seed, sample_sz)
 		b = self.zoom_buf(x)
@@ -167,6 +194,8 @@ class MixologyCodeGen(object):
 
 		del x
 
+		if isinstance(b, bytes):
+			b = b.decode('latin-1')
 		return b
 
 	def _mix_sample_idxs(self, idxs, light_idxs):
@@ -235,7 +264,9 @@ class MixologyCodeGen(object):
 
 
 	def generate_code(self):
-		t = Template(H_TMPL)
+		if not _jinja_available:
+			raise RuntimeError("jinja2 not available")
+		t = _JinjaTemplate(H_TMPL)
 
 		s = t.render(chem_forms=self.compounds_and_weights, n_chem_forms=len(self.compounds_and_weights))
 		with open(self.h_file_path, 'w') as f:
