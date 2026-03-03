@@ -253,3 +253,4 @@ _backup/
 test.cpp
 challenges/*/bin
 challenges/*/pov
+polls/
