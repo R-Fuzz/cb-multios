@@ -32,7 +32,7 @@
 #define MAX_NUM_SEGS 10
 
 typedef struct seg {
-    cgc_size_t size;
+    uint32_t size;
     char name[16];
     char desc[112];
     uint8_t code[4096];

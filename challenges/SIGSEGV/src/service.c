@@ -141,7 +141,7 @@ int cgc_validate_seg(segnode_t *curnode) {
         #ifndef PATCHED_1
         for (i=0; i < NUM_TRUSTED && (err = cgc_strncmp((char*)res,(char*)trusted[i],16)); i++);
         #else
-        for (i=0; i < NUM_TRUSTED && (err = memcmp(res,trusted[i],16)); i++);
+        for (i=0; i < NUM_TRUSTED && (err = cgc_memcmp(res,trusted[i],16)); i++);
         #endif
         if (err)
             goto flail;
