@@ -56,7 +56,7 @@ static void cgc_clear_split_squarerabbit()
 }
 
 
-static void cgc_new_srabbit_game(bet)
+static void cgc_new_srabbit_game(int bet)
 {
     cgc_clear_split_squarerabbit();
     cgc_clear_squarerabbit(g_srabbit);
