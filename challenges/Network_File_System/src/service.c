@@ -82,6 +82,6 @@ int main(int cgc_argc, char *cgc_argv[]) {
 	}
 
 	// all done
-        DestroyFilesystem();
+        cgc_DestroyFilesystem();
 	return(0);
 }
