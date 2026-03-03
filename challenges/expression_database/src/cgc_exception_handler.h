@@ -45,9 +45,9 @@ typedef struct EXCEPTION_FRAME_STRUCT
     jmp_buf jmpBuffer;
 } tExceptionFrame;
 
-#define TRY         switch( setjmp( cgc_get_next_exception_frame()->jmpBuffer ) ) { case 0: while(1) {
+#define TRY         switch( cgc_setjmp( cgc_get_next_exception_frame()->jmpBuffer ) ) { case 0: while(1) {
 #define CATCH(e)    break; case e:
-#define THROW(e)    longjmp( cgc_get_current_exception_frame()->jmpBuffer, e )
+#define THROW(e)    cgc_longjmp( cgc_get_current_exception_frame()->jmpBuffer, e )
 #define FINALLY   break; } default:
 #define ETRY      cgc_pop_exception_frame(); }
 
