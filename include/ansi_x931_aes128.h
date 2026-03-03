@@ -23,6 +23,10 @@ typedef struct cgc_prng {
     uint8_t random_idx;
 } cgc_prng;
 
-void cgc_init_prng(cgc_prng*, const cgc_aes_state*);
+/* Use __libcgc_ prefix to avoid ELF interposition by challenge-specific
+ * functions that might define cgc_init_prng with a different signature.
+ * FSK_Messaging_Service defines cgc_init_prng(void) which would shadow
+ * this function during dynamic linking. */
+void __libcgc_init_prng(cgc_prng*, const cgc_aes_state*);
 void cgc_aes_get_bytes(cgc_prng*, uint32_t, uint8_t*);
 #endif

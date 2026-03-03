@@ -12,8 +12,11 @@ void cgc_xor(const uint8_t*, const uint8_t*, uint8_t*);
  * Initializes a PRNG from a given seed
  * @param prng PRNG to initialize
  * @param seed Initial state of the PRNG
+ *
+ * Named __libcgc_init_prng to avoid ELF interposition by challenge code
+ * that may define cgc_init_prng with a different (no-argument) signature.
  */
-void cgc_init_prng(cgc_prng *prng, const cgc_aes_state *seed) {
+void __libcgc_init_prng(cgc_prng *prng, const cgc_aes_state *seed) {
     memset(prng, 0, sizeof(cgc_prng));
     memcpy(&prng->state, seed, sizeof(cgc_aes_state));
 

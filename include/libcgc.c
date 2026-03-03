@@ -71,8 +71,12 @@ int cgc_receive(int fd, void *buf, cgc_size_t count, cgc_size_t *rx_bytes) {
 }
 
 /* Marshal a CGC fd set into an OS fd set. */
-static int cgc_copy_cgc_fd_set(const cgc_fd_set *cgc_fds, fd_set *os_fds, int *num_fds) {
-  for (unsigned fd = 0; fd < CGC__NFDBITS; ++fd) {
+static int cgc_copy_cgc_fd_set(const cgc_fd_set *cgc_fds, fd_set *os_fds, int *num_fds, int max_fd) {
+  /* Only examine bits for fds in [0, max_fd).  On 64-bit, the wider
+   * _fd_mask word may contain garbage from uninitialized stack storage
+   * in the bits beyond the fds the caller actually set; ignoring those
+   * bits prevents spurious EINVAL / EBADF returns. */
+  for (unsigned fd = 0; fd < (unsigned)max_fd; ++fd) {
     if (CGC_FD_ISSET(fd, cgc_fds)) {
       // Shouldn't be using an fd greater than the allowed values
       if (fd >= EXPECTED_MAX_FDS) {
@@ -116,20 +120,22 @@ int cgc_fdwait(int nfds, cgc_fd_set *readfds, cgc_fd_set *writefds,
   FD_ZERO(&write_fds);
 
   if (readfds) {
-    if (0 != (ret = cgc_copy_cgc_fd_set(readfds, &read_fds, &actual_num_fds))) {
+    if (0 != (ret = cgc_copy_cgc_fd_set(readfds, &read_fds, &actual_num_fds, nfds))) {
       return ret;
     }
   }
 
   if (writefds) {
-    if (0 != (ret = cgc_copy_cgc_fd_set(writefds, &write_fds, &actual_num_fds))) {
+    if (0 != (ret = cgc_copy_cgc_fd_set(writefds, &write_fds, &actual_num_fds, nfds))) {
       return ret;
     }
   }
 
-  if (actual_num_fds != nfds) {
-    return CGC_EINVAL;  /* Not actually specified, but oh well. */
-  }
+  /* Note: The strict actual_num_fds == nfds check was removed.
+   * On 64-bit, cgc_fd_set uses 64-bit _fd_mask words; uninitialized
+   * challenge-side cgc_fd_set variables may have garbage in high bits,
+   * causing spurious EINVAL.  The original CGC kernel did not enforce
+   * this count, so we omit it here. */
 
   if (readfds)  CGC_FD_ZERO(readfds);
   if (writefds) CGC_FD_ZERO(writefds);
@@ -179,6 +185,9 @@ int cgc_allocate(cgc_size_t length, int is_executable, void **addr) {
    * addresses fit in 32-bit space. Use MAP_32BIT to keep allocations
    * in the lower 2GB range, which is compatible with 32-bit address
    * space assumptions.
+   * However, MAP_32BIT limits the total range to 2GB, so very large
+   * allocations (>= 512MB) cannot use MAP_32BIT. For those, fall back
+   * to unrestricted mmap after trying MAP_32BIT first.
    */
 #if defined(__x86_64__) || defined(__aarch64__) || defined(__LP64__)
   #ifdef MAP_32BIT
@@ -187,6 +196,17 @@ int cgc_allocate(cgc_size_t length, int is_executable, void **addr) {
 #endif
 
   void *return_address = mmap(NULL, length, page_perms, mmap_flags, -1, 0);
+
+#if defined(__x86_64__) || defined(__aarch64__) || defined(__LP64__)
+  #ifdef MAP_32BIT
+  /* If MAP_32BIT allocation failed (e.g., large allocation that doesn't fit
+   * in the 2GB range), retry without MAP_32BIT. */
+  if (return_address == MAP_FAILED && (mmap_flags & MAP_32BIT)) {
+    mmap_flags &= ~MAP_32BIT;
+    return_address = mmap(NULL, length, page_perms, mmap_flags, -1, 0);
+  }
+  #endif
+#endif
 
   if (return_address == MAP_FAILED) {
     return linux_errno_to_cgc(errno);
@@ -243,7 +263,7 @@ static void cgc_try_init_prng() {
     // Create the prng
     cgc_internal_prng = (cgc_prng *) malloc(sizeof(cgc_prng));
     cgc_aes_state *seed = (cgc_aes_state *) prng_seed;
-    cgc_init_prng(cgc_internal_prng, seed);
+    __libcgc_init_prng(cgc_internal_prng, seed);
 }
 
 int cgc_random(void *buf, cgc_size_t count, cgc_size_t *rnd_bytes) {
@@ -271,3 +291,4 @@ static void __attribute__ ((constructor)) cgc_initialize_flag_page(void) {
   cgc_try_init_prng();
   cgc_aes_get_bytes(cgc_internal_prng, PAGE_SIZE, mmap_addr);
 }
+

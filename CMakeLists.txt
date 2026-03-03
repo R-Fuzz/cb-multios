@@ -83,6 +83,13 @@ function(build path target)
     aux_source_directory(${path}/include cb_inc)
     set(cb_all_src ${cb_lib} ${cb_src} ${cb_inc})
 
+    # Include the main() wrapper that passes CGC_FLAG_PAGE_ADDRESS as argc.
+    # This is compiled into each challenge binary (not libcgc.so) so that
+    # --wrap=main works correctly at link time.
+    IF(NOT WIN32)
+        set(cb_all_src ${cb_all_src} "${CMAKE_SOURCE_DIR}/include/cgc_main_wrapper.c")
+    ENDIF()
+
     add_executable(${target} ${cb_all_src})
     add_executable(${target}_patched ${cb_all_src})
 
@@ -101,6 +108,14 @@ function(build path target)
 
     target_link_libraries(${target} LINK_PUBLIC cgc)
     target_link_libraries(${target}_patched LINK_PUBLIC cgc)
+
+    # Wrap main() so that CGC_FLAG_PAGE_ADDRESS is passed as argc,
+    # matching the DECREE convention where the OS put the flag page
+    # pointer in the argc slot of main().
+    IF(NOT WIN32)
+        target_link_options(${target} PRIVATE -Wl,--wrap=main)
+        target_link_options(${target}_patched PRIVATE -Wl,--wrap=main)
+    ENDIF()
 
     IF(WIN32)
         # Copy required DLLs post-build

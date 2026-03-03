@@ -494,7 +494,14 @@ class Throw(object):
                 data.append(self.values[value])
             else:
                 data.append(value)
-        to_send = ''.join(data)
+        # Python 3: data may contain str and/or bytes; normalize to bytes
+        bytes_data = []
+        for item in data:
+            if isinstance(item, bytes):
+                bytes_data.append(item)
+            else:
+                bytes_data.append(item.encode('latin-1'))
+        to_send = b''.join(bytes_data)
 
         if self.debug:
             if args['echo'] == 'yes':
@@ -579,6 +586,18 @@ class Throw(object):
             # Check if process and buffer thread are done
             if self.procs and self.procs[0].poll() is not None:
                 if self.buf_thread is None or not self.buf_thread.is_alive():
+                    # Drain queue one final time before breaking: the buffer thread
+                    # may have put data in the queue just before exiting (race between
+                    # the drain above and the thread's put()+exit sequence).
+                    try:
+                        while True:
+                            chunk = self.pipe_raw.get_nowait()
+                            self.pipe_buf += chunk
+                            if os.name == 'nt' and self.pipe_buf.endswith('\r\n'):
+                                self.pipe_buf = self.pipe_buf[:-2] + '\n'
+                            got_any_data = True
+                    except queue.Empty:
+                        pass
                     break
 
             remaining = deadline - time.time()
@@ -589,7 +608,7 @@ class Throw(object):
             # Use a short initial timeout so we can return partial data quickly
             # if only a small amount arrives, but use a longer timeout when
             # we haven't received any data yet (waiting for service to respond).
-            wait_timeout = 0.05 if got_any_data else min(remaining, 0.5)
+            wait_timeout = 0.002 if got_any_data else min(remaining, 0.05)
             self.pipe_event.clear()
             # Drain queue one more time in case data arrived between clear and wait
             try:
@@ -785,7 +804,7 @@ class POV(object):
         """
         for i in [' ', '\n', '\r', '\t']:
             data = data.replace(i, '')
-        return bytes.fromhex(data)
+        return bytes.fromhex(data).decode('latin-1')
 
     @staticmethod
     def compile_pcre(data):
