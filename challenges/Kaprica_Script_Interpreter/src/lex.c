@@ -1218,7 +1218,7 @@ static int verify_expression(expr_t *expr)
 #ifdef DEBUG
     print_expression(expr, "");
 #endif
-    fdprintf(STDERR, "\n");
+    cgc_fdprintf(STDERR, "\n");
     return 1;
 }
 
@@ -1239,39 +1239,39 @@ static void print_expression(expr_t *expr, const char *prefix)
         return;
 
     strcpy(buf, prefix);
-    fdprintf(STDERR, "%s%s", prefix, op_to_name(expr->op));
+    cgc_fdprintf(STDERR, "%s%s", prefix, op_to_name(expr->op));
     switch (expr->op)
     {
     case OP_CONST_REGEXP:
-        fdprintf(STDERR, "[%s]", expr->e_cregexp.value);
+        cgc_fdprintf(STDERR, "[%s]", expr->e_cregexp.value);
         break;
     case OP_CONST_STRING:
-        fdprintf(STDERR, "[%s]", expr->e_cstring.value);
+        cgc_fdprintf(STDERR, "[%s]", expr->e_cstring.value);
         break;
     case OP_FIELD:
     case OP_CONST_INT:
-        fdprintf(STDERR, " [%d]", expr->e_cint.value);
+        cgc_fdprintf(STDERR, " [%d]", expr->e_cint.value);
         break;
     case OP_FIELD_VAR:
     case OP_VAR:
-        fdprintf(STDERR, " [%s]", expr->e_var.name);
+        cgc_fdprintf(STDERR, " [%s]", expr->e_var.name);
         break;
     default:
         break;
     }
 
-    fdprintf(STDERR, "\n");
+    cgc_fdprintf(STDERR, "\n");
 
     if (cgc_strlen(buf) < sizeof(buf)-1)
         strcat(buf, "\t");
 
     if (expr->op == OP_CONDITIONAL)
     {
-        fdprintf(STDERR, "%scond=\n", prefix);
+        cgc_fdprintf(STDERR, "%scond=\n", prefix);
         print_expression(expr->e_cond.cond, buf);
-        fdprintf(STDERR, "%svtrue=\n", prefix);
+        cgc_fdprintf(STDERR, "%svtrue=\n", prefix);
         print_expression(expr->e_cond.vtrue, buf);
-        fdprintf(STDERR, "%svfalse=\n", prefix);
+        cgc_fdprintf(STDERR, "%svfalse=\n", prefix);
         print_expression(expr->e_cond.vfalse, buf);
     }
     else if (is_unary(expr->op))
@@ -1280,9 +1280,9 @@ static void print_expression(expr_t *expr, const char *prefix)
     }
     else if (is_binary(expr->op))
     {
-        fdprintf(STDERR, "%slhs=\n", prefix);
+        cgc_fdprintf(STDERR, "%slhs=\n", prefix);
         print_expression(expr->e_binop.lhs, buf);
-        fdprintf(STDERR, "%srhs=\n", prefix);
+        cgc_fdprintf(STDERR, "%srhs=\n", prefix);
         print_expression(expr->e_binop.rhs, buf);
     }
 
@@ -1317,7 +1317,7 @@ static void print_statement(stmt_t *stmt, const char *prefix)
     if (stmt == NULL)
         return;
 
-    fdprintf(STDERR, "%s%s\n", prefix, stmt_to_name(stmt->type));
+    cgc_fdprintf(STDERR, "%s%s\n", prefix, stmt_to_name(stmt->type));
     
     strcpy(buf, prefix);
     if (cgc_strlen(buf) < sizeof(buf) - 1)
@@ -1326,39 +1326,39 @@ static void print_statement(stmt_t *stmt, const char *prefix)
     switch(stmt->type)
     {
     case STMT_WHILE:
-        fdprintf(STDERR, "%spost=%d\n", prefix, stmt->s_while.post);
-        fdprintf(STDERR, "%scond=\n", prefix);
+        cgc_fdprintf(STDERR, "%spost=%d\n", prefix, stmt->s_while.post);
+        cgc_fdprintf(STDERR, "%scond=\n", prefix);
         print_expression(stmt->s_while.cond, buf);
-        fdprintf(STDERR, "%schild=\n", prefix);
+        cgc_fdprintf(STDERR, "%schild=\n", prefix);
         print_statement(stmt->s_while.child, buf);
         break;
     case STMT_EXIT:
-        fdprintf(STDERR, "%svalue=%d\n", stmt->s_exit.value);
+        cgc_fdprintf(STDERR, "%svalue=%d\n", stmt->s_exit.value);
         break;
     case STMT_IF:
-        fdprintf(STDERR, "%scond=\n", prefix);
+        cgc_fdprintf(STDERR, "%scond=\n", prefix);
         print_expression(stmt->s_if.cond, buf);
-        fdprintf(STDERR, "%schild=\n", prefix);
+        cgc_fdprintf(STDERR, "%schild=\n", prefix);
         print_statement(stmt->s_if.child, buf);
         break;
     case STMT_EXPR:
-        fdprintf(STDERR, "%sexpr=\n", prefix);
+        cgc_fdprintf(STDERR, "%sexpr=\n", prefix);
         print_expression(stmt->s_expr.expr, buf);
         break;
     case STMT_FOR:
-        fdprintf(STDERR, "%sinit=\n", prefix);
+        cgc_fdprintf(STDERR, "%sinit=\n", prefix);
         print_expression(stmt->s_for.init, buf);
-        fdprintf(STDERR, "%scond=\n", prefix);
+        cgc_fdprintf(STDERR, "%scond=\n", prefix);
         print_expression(stmt->s_for.cond, buf);
-        fdprintf(STDERR, "%spost=\n", prefix);
+        cgc_fdprintf(STDERR, "%spost=\n", prefix);
         print_expression(stmt->s_for.post, buf);
-        fdprintf(STDERR, "%schild=\n", prefix);
+        cgc_fdprintf(STDERR, "%schild=\n", prefix);
         print_statement(stmt->s_for.child, buf);
         break;
     case STMT_PRINT:
-        fdprintf(STDERR, "%sfmt=\n", prefix);
+        cgc_fdprintf(STDERR, "%sfmt=\n", prefix);
         print_expression(stmt->s_print.fmt, buf);
-        fdprintf(STDERR, "%sargs=\n", prefix);
+        cgc_fdprintf(STDERR, "%sargs=\n", prefix);
         print_expression(stmt->s_print.expr, buf);
         break;
     }
