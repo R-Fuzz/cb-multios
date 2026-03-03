@@ -2,10 +2,10 @@
 nodes:
 - name: start
   chance: 1.0
-  continue: 0.9
+  continue: 1.0
 - name: prompt
   chance: 1.0
-  continue: 0.9
+  continue: 1.0
 - name: quit
 - name: add_good
 - name: play_good

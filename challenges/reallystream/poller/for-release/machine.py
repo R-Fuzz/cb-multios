@@ -27,23 +27,21 @@ from xml.sax.saxutils import escape
 from generator.actions import Actions
 from random import choice, randint
 from struct import pack,unpack
-import imp
 import os
 import random
 import string
 
 def random_alpha(a, b):
-    return ''.join(choice(string.letters) for _ in range(randint(a, b)))
+    return ''.join(choice(string.ascii_letters) for _ in range(randint(a, b)))
 
 
 def random_string(a, b):
-    chars = string.letters + string.digits
+    chars = string.ascii_letters + string.digits
     return ''.join(choice(chars) for _ in range(randint(a, b)))
 
 
 def random_data(a,b):
-    chars = ''.join(map(chr, range(256)))
-    return ''.join(choice(chars) for _ in range(randint(a, b)))
+    return bytes([random.randint(0, 255) for _ in range(randint(a, b))])
 
 hello = "Hello.*"
 
@@ -74,20 +72,20 @@ class Heartthrob(Actions):
         self.state['videos'][name] = {'buf':buf}
         
         if self.chance(0.5):
-            csum = 0xffffffff & sum(unpack("<I",buf[i:i+4])[0]^0x42424242 for i in xrange(0,l,4))
+            csum = 0xffffffff & sum(unpack("<I",buf[i:i+4])[0]^0x42424242 for i in range(0,l,4))
             csum = pack("<I",csum)
             self.state['videos'][name]['badcsum'] = False
         else:
             csum = random_data(4, 4)
             self.state['videos'][name]['badcsum'] = True
 
-        buf += csum
+        buf = buf + csum
 
         self.write("add %s\n" % name)
         self.read(delim=": ", expect="Length")
         self.write(str(l+4)+"\n")
         self.read(delim="\n",expect="Your personal access key is: 0x42")
-        self.write(buf)
+        self.write(buf.decode('latin-1'))
         self.state['vidlist'].append(name)
 
     def play_good(self):
@@ -97,7 +95,7 @@ class Heartthrob(Actions):
             self.write("\n")
             self.read(delim="\n",expect="wat")
             return
-        vid = choice(self.state['videos'].items())
+        vid = choice(list(self.state['videos'].items()))
         key = "B" if self.chance(0.5) else chr(randint(0x0b,ord('A')))
         self.write("play %s %s\n" % (vid[0],key))
 
@@ -105,8 +103,15 @@ class Heartthrob(Actions):
             self.read(delim="\n",expect="I hate this hacker crap!")
         else:
             #calc expected xord, run-length decoded buffer
-            xbuf = ''.join(chr(0x42^ord(i)) for i in vid[1]['buf'])
-            xbuf = ''.join((ord(xbuf[i])+1)*xbuf[i+1] for i in xrange(0,len(xbuf),2))
+            raw = vid[1]['buf']  # bytes
+            xbuf_bytes = bytes([0x42 ^ b for b in raw])
+            # RLE decode: pairs of (count+1, value)
+            decoded = []
+            for i in range(0, len(xbuf_bytes), 2):
+                count = xbuf_bytes[i] + 1
+                val = xbuf_bytes[i+1]
+                decoded.extend([val] * count)
+            xbuf = bytes(decoded).decode('latin-1')
             self.read(delim="PLAYBACK FINISHED\n",expect=xbuf+"\n")
 
     def list(self):
