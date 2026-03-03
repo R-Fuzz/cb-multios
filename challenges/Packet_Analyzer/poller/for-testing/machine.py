@@ -9,7 +9,7 @@ from generator.actions import Actions
 class Packet():
 
   def generate(self):
- 
+
     # Generate Physical Data
     self.phy_time_received = random.randint(1420088400, 1470024000)
     self.phy_time_sent = random.randint(1420088400, 1470024000)
@@ -25,7 +25,7 @@ class Packet():
       self.phy_receive_strength = random.randint(1,100)
       self.phy_frequency = random.randint(2400, 6000)
       self.phy_snr = random.randint(0, 0xffffffff)
-      
+
 
     # Generate Transport Data
     self.tp_type = random.randint(1,2)
@@ -64,8 +64,8 @@ class Packet():
       # Audio Stream
       self.app_encoding = random.randint(1,10)
       self.app_bit_rate = random.choice([8, 16, 24, 32, 40, 48])
-      self.app_length = random.randint(12, 1024) 
-      self.app_content = ''.join(chr(random.randint(0,255)) for _ in range(self.app_length - 12))
+      self.app_length = random.randint(12, 1024)
+      self.app_content = bytes([random.randint(0,255) for _ in range(self.app_length - 12)])
       application_data.append(struct.pack("<IHHI", self.app_length, self.app_type, self.app_encoding, self.app_bit_rate))
       if (self.app_content):
         application_data.append(self.app_content)
@@ -82,11 +82,11 @@ class Packet():
       for i in range(self.app_num_options):
         option = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(5,100)))
         app_options.append(struct.pack("<B", len(option)))
-        app_options.append(option)
+        app_options.append(option.encode('latin-1'))
         self.app_options.append(option)
       video_length = random.randint(0, 1024)
-      self.app_content = ''.join(chr(random.randint(0,255)) for _ in range(video_length))
-      self.app_length = len(''.join(app_options)) + 4 + 2 + 2 + 2 + 2 + 2 + video_length
+      self.app_content = bytes([random.randint(0,255) for _ in range(video_length)])
+      self.app_length = len(b''.join(app_options)) + 4 + 2 + 2 + 2 + 2 + 2 + video_length
       application_data.append(struct.pack("<IHHHHH", self.app_length, self.app_type, self.app_encoding, self.app_resolution_x, self.app_resolution_y, self.app_num_options))
       if app_options:
         application_data.extend(app_options)
@@ -98,11 +98,11 @@ class Packet():
       self.app_filename = ''.join(random.choice(string.ascii_letters) for _ in range(32))
       self.app_filetype = ''.join(random.choice(string.ascii_letters) for _ in range(32))
       file_len = random.randint(0, 1024)
-      self.app_content = ''.join(chr(random.randint(0,255)) for _ in range(file_len))
+      self.app_content = bytes([random.randint(0,255) for _ in range(file_len)])
       self.app_length = 4 + 2 + 32 + 32 + file_len
       application_data.append(struct.pack("<IH", self.app_length, self.app_type))
-      application_data.append(self.app_filename)
-      application_data.append(self.app_filetype)
+      application_data.append(self.app_filename.encode('latin-1'))
+      application_data.append(self.app_filetype.encode('latin-1'))
       if (self.app_content):
         application_data.append(self.app_content)
 
@@ -114,16 +114,16 @@ class Packet():
       self.app_to = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(0,255)))
       self.app_subject = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(0,255)))
       content_len = random.randint(0, 1024)
-      self.app_content = ''.join(random.choice(string.ascii_letters) for _ in range(content_len))
+      self.app_content = ''.join(random.choice(string.ascii_letters) for _ in range(content_len)).encode('latin-1')
 
       self.app_length = 4 + 2 + len(self.app_from) + len(self.app_to) + len(self.app_subject) + content_len
       application_data.append(struct.pack("<IH", self.app_length, self.app_type))
       application_data.append(struct.pack("B", len(self.app_from)))
-      application_data.append(self.app_from)
+      application_data.append(self.app_from.encode('latin-1'))
       application_data.append(struct.pack("B", len(self.app_to)))
-      application_data.append(self.app_to)
+      application_data.append(self.app_to.encode('latin-1'))
       application_data.append(struct.pack("B", len(self.app_subject)))
-      application_data.append(self.app_subject)
+      application_data.append(self.app_subject.encode('latin-1'))
       if (self.app_content):
         application_data.append(self.app_content)
 
@@ -131,21 +131,21 @@ class Packet():
       # Webpage
       self.app_url = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(0,256)))
       self.app_headers = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(0,1024)))
-      self.app_content = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(0, 1024)))
+      self.app_content = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(0, 1024))).encode('latin-1')
       self.app_length = 4 + 2 + 2 + len(self.app_url) + 2 + len(self.app_headers) + 2 + len(self.app_content)
 
       application_data.append(struct.pack("<IH", self.app_length, self.app_type))
       application_data.append(struct.pack("<H", len(self.app_url)))
       if (self.app_url):
-        application_data.append(self.app_url)
+        application_data.append(self.app_url.encode('latin-1'))
       application_data.append(struct.pack("<H", len(self.app_headers)))
       if (self.app_headers):
-        application_data.append(self.app_headers)
+        application_data.append(self.app_headers.encode('latin-1'))
       application_data.append(struct.pack("<H", len(self.app_content)))
       if (self.app_content):
         application_data.append(self.app_content)
 
-   
+
     # Make Network Layer
     network_data = []
     if (self.network_type == 1):
@@ -179,15 +179,15 @@ class Packet():
     if (self.phy_type == 1):
       # Wire
       self.phy_checksum = 0
-      for each in ''.join(transport_data + network_data + application_data):
-        self.phy_checksum = (self.phy_checksum + ord(each)) & 0xffffffff
+      for each in b''.join(transport_data + network_data + application_data):
+        self.phy_checksum = (self.phy_checksum + each) & 0xffffffff
       self.phy_length = self.tp_length + 4 + 4 + 4 + 2 + 2 + 4
-      
+
       phy_data.append(struct.pack("<IIIH", self.phy_time_received, self.phy_time_sent, self.phy_length, self.phy_type))
       phy_data.append(struct.pack("<HI", self.phy_wirespeed, self.phy_checksum))
     elif (self.phy_type == 2):
       # Radio
-      # Calculate ECC 
+      # Calculate ECC
       self.phy_length = self.tp_length + 4 + 4 + 4 + 2 + 4 + 4 + 4 + 4 + 4 + 4 + 4
       phy_data.append(struct.pack("<IIIH", self.phy_time_received, self.phy_time_sent, self.phy_length, self.phy_type))
       phy_data.append(struct.pack("<IIIIII", self.phy_source_addr, self.phy_dest_addr, self.phy_transmit_strength, self.phy_receive_strength, self.phy_frequency, self.phy_snr))
@@ -197,20 +197,20 @@ class Packet():
       # Raw
       self.phy_length = self.tp_length + 4 + 4 + 4 + 2
       phy_data.append(struct.pack("<IIIH", self.phy_time_received, self.phy_time_sent, self.phy_length, self.phy_type))
-    self.packet_bytes = ''.join(phy_data + transport_data + network_data + application_data)
-  
-  
+    self.packet_bytes = b''.join(phy_data + transport_data + network_data + application_data)
+
+
 
   def get_bytes(self):
-    bytes = []
-    bytes.append(struct.pack("<H", len(self.packet_bytes)))
-    bytes.append(self.packet_bytes)
-    return ''.join(bytes)
+    result = []
+    result.append(struct.pack("<H", len(self.packet_bytes)))
+    result.append(self.packet_bytes)
+    return b''.join(result)
 
 class Filter():
 
   def __init__(self):
-    self.filterdata = ""
+    self.filterdata = b""
     self.include = True
 
   def generate_filter(self, include=True):
@@ -222,31 +222,31 @@ class Filter():
       if (random.randint(0, 10) == 10):
         filtermask.append(struct.pack("<B", random.randint(0,255)))
       else:
-        filtermask.append("\x00")
-    self.filtermask = ''.join(filtermask)
+        filtermask.append(b"\x00")
+    self.filtermask = b''.join(filtermask)
     self.include = include
-    
+
   def get_bytes(self):
     output = []
     output.append(struct.pack("<H", len(self.filterdata)))
     #include or exclude
     if self.include:
-      output.append('\x01')
+      output.append(b'\x01')
     else:
-      output.append('\x02')
+      output.append(b'\x02')
 
     output.append(self.filtermask)
     output.append(self.filterdata)
-    return ''.join(output)
+    return b''.join(output)
 
   def match_packet(self, packet):
     if (len(self.filtermask) > packet.phy_length):
       return False
     packet_bytes = packet.get_bytes()[2:]
     for i in range(len(self.filtermask)):
-      p_i = struct.unpack("B", packet_bytes[i])[0]
-      m_i = struct.unpack("B", self.filtermask[i])[0]
-      f_i = struct.unpack("B", self.filterdata[i])[0]
+      p_i = packet_bytes[i]
+      m_i = self.filtermask[i]
+      f_i = self.filterdata[i]
       if ((p_i & m_i) != (f_i & m_i)):
         return False
     return True
@@ -255,31 +255,33 @@ class OptionHeader():
 
   def __init__(self):
     self.type = 0
-    self.header = ""
+    self.header = b""
     self.display_string = ""
 
   def generate(self):
     self.type = random.randint(1,7)
     if self.type == 1:
       #string
-      self.header = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(1,255)))
-      self.display_string = self.header
+      h = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(1,255)))
+      self.header = h.encode('latin-1')
+      self.display_string = h
     elif self.type == 2:
       #location
       if random.randint(0,1):
         #gps coordinates
         lat = str(random.uniform(-90, 90))
         lon = str(random.uniform(-180, 180))
-        self.header = lat + '\x00' + lon
+        self.header = (lat + '\x00' + lon).encode('latin-1')
         self.display_string = "GPS Coordinates: %s Latitude, %s Longitude" % (lat, lon)
       else:
         #address string
-        self.header = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(1,35)))
-        self.display_string = "Address: " + self.header
+        h = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(1,35)))
+        self.header = h.encode('latin-1')
+        self.display_string = "Address: " + h
     elif self.type == 3:
       #authority
       i = random.randint(0,5)
-      self.header = str(i)
+      self.header = str(i).encode('latin-1')
       names = ["Self", "Law Enforcement", "University", "Employer", "Network Provider"]
       if i != 5:
         self.display_string = "Capturing Authority: " + names[i]
@@ -288,35 +290,39 @@ class OptionHeader():
 
     elif self.type == 4:
       #date
-      self.header = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(1,35)))
-      self.display_string = "Capture Date: " + self.header
+      h = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(1,35)))
+      self.header = h.encode('latin-1')
+      self.display_string = "Capture Date: " + h
     elif self.type == 5:
       #sharing
-      self.header = str(random.randint(0,1))
-      if (self.header == '1'):
+      v = str(random.randint(0,1))
+      self.header = v.encode('latin-1')
+      if (v == '1'):
         self.display_string = "Sharing Allowed: True"
       else:
         self.display_string = "Sharing Allowed: False"
     elif self.type == 6:
       #modified
-      self.header = str(random.randint(0,1))
-      if (self.header == '1'):
+      v = str(random.randint(0,1))
+      self.header = v.encode('latin-1')
+      if (v == '1'):
         self.display_string = "This content has been modified"
       else:
         self.display_string = "This content has not been modified from the original"
     elif self.type == 7:
       #device
-      self.header = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(1,35)))
-      self.display_string = "Capturing Device: " + self.header
+      h = ''.join(random.choice(string.ascii_letters) for _ in range(random.randint(1,35)))
+      self.header = h.encode('latin-1')
+      self.display_string = "Capturing Device: " + h
 
   def get_bytes(self):
-    bytes = []
-    bytes.append(struct.pack("<B", self.type))
+    result = []
+    result.append(struct.pack("<B", self.type))
     if (len(self.header) >= 256):
       self.header = self.header[0:255]
-    bytes.append(struct.pack("<B", len(self.header)))
-    bytes.append(self.header)
-    return ''.join(bytes)
+    result.append(struct.pack("<B", len(self.header)))
+    result.append(self.header)
+    return b''.join(result)
 
 
 class PacketParserPollGenerator(Actions):
@@ -325,11 +331,11 @@ class PacketParserPollGenerator(Actions):
   DISPLAY_TRANSPORT     = 0x0002
   DISPLAY_NETWORK     = 0x0004
   DISPLAY_APPLICATION = 0x0008
-  DISPLAY_STATS       = 0x0010 
+  DISPLAY_STATS       = 0x0010
   DISPLAY_CONTENT     = 0x0020
 
-  MODE_FILE   = '\x01'
-  MODE_STREAM = '\x02'
+  MODE_FILE   = b'\x01'
+  MODE_STREAM = b'\x02'
 
   def start(self):
     return
@@ -349,7 +355,7 @@ class PacketParserPollGenerator(Actions):
 
   def generate_initial_packet(self, mode, num_filters):
     packet = []
-    packet.append("\x5A\xA5\x5A\xA5")
+    packet.append(b"\x5A\xA5\x5A\xA5")
     packet.append(mode)
     display_flags = 0
     if self.chance(0.5):
@@ -367,7 +373,7 @@ class PacketParserPollGenerator(Actions):
     self.display_flags = display_flags
     packet.append(struct.pack("<H", display_flags))
     packet.append(struct.pack("<B", num_filters))
-    return ''.join(packet)
+    return b''.join(packet)
 
 
   def CheckAllFilters(self, packet):
@@ -401,11 +407,11 @@ class PacketParserPollGenerator(Actions):
     for each in data:
       line.append(each)
       if (len(line) == 16):
-        self.read(delim='\n', expect=''.join('{:02X} '.format(ord(b)) for b in line))
+        self.read(delim='\n', expect=''.join('{:02X} '.format(b) for b in line))
         line = []
     if len(line) != 0:
-      self.read(delim='\n', expect=''.join('{:02X} '.format(ord(b)) for b in line))
-        
+      self.read(delim='\n', expect=''.join('{:02X} '.format(b) for b in line))
+
   def AnalyzePacket(self, packet):
     if (not self.ShowPacket(packet)):
       self.read(delim='\n', expect="skip")
@@ -503,14 +509,14 @@ class PacketParserPollGenerator(Actions):
       self.ConditionalRead(self.DISPLAY_APPLICATION, "Application type: Webpage")
       self.ConditionalRead(self.DISPLAY_APPLICATION, "URL: %s" % packet.app_url)
       self.ConditionalRead(self.DISPLAY_APPLICATION, "Headers: %s" % packet.app_headers)
-      
+
 
     if (self.display_flags & self.DISPLAY_CONTENT):
       if (packet.app_content):
         self.HexDump(packet.app_content)
       self.read(delim='\n')
 
-     
+
 
   def GetStatistics(self):
     if (self.display_flags & self.DISPLAY_STATS):
@@ -522,7 +528,7 @@ class PacketParserPollGenerator(Actions):
       self.read(delim='\n', expect="\tSmallest Packet: %d" % self.smallest_packet)
       self.read(delim='\n', expect="\tNumber of malformed packets: %d" % self.num_malformed)
       self.read(delim='\n', expect="\tNumber of packets shown %d" % self.num_packets_shown)
- 
+
       self.read(delim='\n', expect="Option Headers:")
       for o in self.option_headers:
         self.read(delim='\n', expect=o.display_string)
@@ -551,7 +557,7 @@ class PacketParserPollGenerator(Actions):
 
     #file header
     file_header = []
-    file_header.append('\xA9\xDC\xAF\xDC')
+    file_header.append(b'\xA9\xDC\xAF\xDC')
     self.start_time = random.randint(1420088400, 1470024000)
     self.end_time = random.randint(1420088400, 1470024000)
     file_header.append(struct.pack("<I", self.start_time))
@@ -573,13 +579,13 @@ class PacketParserPollGenerator(Actions):
       p.generate()
       self.packets.append(p)
 
-    #transmit 
-    self.write(''.join(initial_packet))
+    #transmit
+    self.write(initial_packet)
     if (filter_bytes):
-      self.write(''.join(filter_bytes))
-    self.write(''.join(file_header))
+      self.write(b''.join(filter_bytes))
+    self.write(b''.join(file_header))
     if (option_bytes):
-      self.write(''.join(option_bytes))
+      self.write(b''.join(option_bytes))
     for i in range(self.num_packets):
       p = self.packets[i]
       self.write(struct.pack("<I", random.randint(1420088400, 1470024000)))
@@ -599,7 +605,7 @@ class PacketParserPollGenerator(Actions):
       self.num_filters = random.randint(1,4)
     else:
       self.num_filters = 0
-    
+
     initial_packet = self.generate_initial_packet(mode=self.MODE_STREAM, num_filters=self.num_filters)
 
     filter_bytes = []
@@ -620,22 +626,21 @@ class PacketParserPollGenerator(Actions):
       p.generate()
       self.packets.append(p)
 
-    self.write(''.join(initial_packet))
+    self.write(initial_packet)
     if (filter_bytes):
-      self.write(''.join(filter_bytes))
+      self.write(b''.join(filter_bytes))
 
     for i in range(self.num_packets):
       p = self.packets[i]
       self.write(p.get_bytes())
       self.AnalyzePacket(p)
 
-    self.write("\x00\x00")
+    self.write(b"\x00\x00")
 
     self.GetStatistics()
     return
 
   def final(self):
     self.read(delim='\n', expect="Goodbye.")
-
 
 
