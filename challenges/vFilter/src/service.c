@@ -55,13 +55,12 @@ void cgc_check_seed()
 }
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
     file_hdr_t *file;
     filter_t *filter;
     pkt_hdr_t *pkt;
     unsigned int length, value, i;
-    void *secret_page = (void *)secret_page_i;
+    void *secret_page = (void *)CGC_FLAG_PAGE_ADDRESS;
 
     (void) secret_page;
 
