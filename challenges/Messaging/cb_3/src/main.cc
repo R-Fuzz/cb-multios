@@ -115,9 +115,8 @@ DEFINE_CLASS(Server, server)
 DEFINE_CLASS_END()
 
 extern "C" int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    secret_page = (char *)secret_page_i;
+    secret_page = (char *)CGC_FLAG_PAGE_ADDRESS;
 
     MsgSend(ConnectionStatic, (int)Connection::Constructor, ServerStatic, (int)Server::Constructor);
     runServer();
