@@ -38,7 +38,7 @@ class TemplateGenerator(Actions):
 		return message
 
 	def _absoluteValueMap(self, message):
-		message = map(abs, message)
+		message = list(map(abs, message))
 		return message
 
 	def _modulusCoordinatesWithDimensions(self, message):
@@ -60,7 +60,7 @@ class TemplateGenerator(Actions):
 		else:
 			message_average = message_sum // message_len
 
-		message = map(lambda x: x - message_average, message)
+		message = list(map(lambda x: x - message_average, message))
 		return message
 
 	def start(self):
@@ -106,7 +106,12 @@ class TemplateGenerator(Actions):
 			message_list.append(message_str)
 
 		for m in range(0, len(message_list) - 4):
-			self.read(message_list[m])
+			msg = message_list[m]
+			if isinstance(msg, bytes):
+				msg = msg.decode('latin-1')
+			# Binary sends sizeof(Message)-sizeof(short**) = 12 bytes:
+			# 10 bytes of values followed by 2 bytes of zero padding.
+			self.read(length=12, expect=msg + '\x00\x00')
 
 
 	def quit(self):
