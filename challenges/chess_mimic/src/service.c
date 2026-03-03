@@ -65,7 +65,7 @@ void cgc_displayboard(void)
     {
         for(int j = 0; j < WIDTH; j++)
         {
-            cgc_transmit(0, (char*)&(*ptr_array)[j][i], 1, NULL);
+            cgc_transmit(STDOUT, (char*)&(*ptr_array)[j][i], 1, NULL);
         }
         cgc_printf("\n");
     }
