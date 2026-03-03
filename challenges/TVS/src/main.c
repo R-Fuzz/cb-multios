@@ -73,7 +73,20 @@ int main(int cgc_argc, char *cgc_argv[])
 {
     uint8_t *data = NULL;
     cgc_init_vault();
+#ifdef __x86_64__
+    /* On 64-bit, store the original 32-bit handler addresses that the poll
+     * generator hardcoded (from the 32-bit build):
+     *   ping=0x080482d0, time=0x080484a0, vault=0x08048590
+     * Stored little-endian to match the 32-bit binary layout.
+     * This is necessary because the pre-generated polls expect these exact
+     * bytes when they RETRIEVE vault entry 0. */
+    {
+        uint32_t handlers32[3] = {0x080482d0, 0x080484a0, 0x08048590};
+        cgc_store_in_vault(0, handlers32, sizeof(handlers32));
+    }
+#else
     cgc_store_in_vault(0, (void *)cgc_handlers, sizeof(cgc_handlers));
+#endif
     while (1)
     {
         uint8_t msg[6], *newdata;
