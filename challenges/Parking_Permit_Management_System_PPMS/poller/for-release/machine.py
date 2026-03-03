@@ -18,17 +18,17 @@ CMD_INVALID = 6
 MAX_SPOT_NUMBER = 200
 
 def random_string_n(size=20):
-  return ''.join([random.choice(string.ascii_letters) for x in xrange(size)])
+  return ''.join([random.choice(string.ascii_letters) for x in range(size)])
 
 def random_string(size=20):
-  return ''.join([random.choice(string.ascii_letters) for x in xrange(random.randint(1,size))])
+  return ''.join([random.choice(string.ascii_letters) for x in range(random.randint(1,size))])
 
 def random_digits(size=20):
-  return ''.join([random.choice(string.digits) for x in xrange(random.randint(1,size))])
+  return ''.join([random.choice(string.digits) for x in range(random.randint(1,size))])
 
 class APPMS(Actions):
   def start(self):
-    self.state['g_mkey'] = 'I_AM_YOUR_FATHER'
+    self.state['g_mkey'] = b'I_AM_YOUR_FATHER'
     self.state['g_session_key'] = None
     self.state['g_auth'] = 0
 
@@ -50,7 +50,7 @@ class APPMS(Actions):
     for c in token:
       cs += ord(c)
     cs %= 0xAB
-    token = token + chr(cs)
+    token = token.encode('latin-1') + bytes([cs])
     return token
 
   def cmd_auth(self):
@@ -71,12 +71,12 @@ class APPMS(Actions):
     lic = self.license_number()
     n_e = random.randint(0, 1000)
     spot = random.randint(1, MAX_SPOT_NUMBER)
-    cmd = struct.pack('<b16s10sII', CMD_NEW_PERMIT, '_SESSION_KEY_', lic, n_e, spot)
+    cmd = struct.pack('<b16s10sII', CMD_NEW_PERMIT, b'_SESSION_KEY_', lic.encode(), n_e, spot)
     cmd = struct.pack('<I', len(cmd)) + cmd
     self.write(cmd[:5], self.state['g_session_key'], cmd[21:])
 
     if self.state['g_auth'] > 0:
-      self.read(length=(1 + 4), expect='\x00' + struct.pack('<I', 26))
+      self.read(length=(1 + 4), expect=b'\x00' + struct.pack('<I', 26))
       self.read(length=(8 + 10 + 2 * 4))
       self.state['g_auth'] -= 1
     else:
@@ -92,7 +92,7 @@ class APPMS(Actions):
     valid = True
     n = random.randint(0, 5)
 
-    for i in xrange(n):
+    for i in range(n):
       while True:
         lic = self.license_number()
         if lic not in lics:
@@ -112,23 +112,23 @@ class APPMS(Actions):
       token = self.permit_token()
       tokens.append(token)
 
-    cmd = struct.pack('<b16sI', CMD_NEW_PERMIT_RING, '_SESSION_KEY_', n)
-    for i in xrange(n):
-      cmd += struct.pack('<8s10sII', tokens[i], lics[i], n_es[i], spots[i])
+    cmd = struct.pack('<b16sI', CMD_NEW_PERMIT_RING, b'_SESSION_KEY_', n)
+    for i in range(n):
+      cmd += struct.pack('<8s10sII', tokens[i], lics[i].encode(), n_es[i], spots[i])
     ns = (5 - n) * 26
     if ns > 0:
-      cmd += '\x00' * ns
+      cmd += b'\x00' * ns
     cmd = struct.pack('<I', len(cmd)) + cmd
     self.write(cmd[:5], self.state['g_session_key'], cmd[21:])
 
     if self.state['g_auth'] > 0 and valid:
-      self.read(length=(1 + 4), expect='\x00' + struct.pack('<I', 4 + 5 * 26))
+      self.read(length=(1 + 4), expect=b'\x00' + struct.pack('<I', 4 + 5 * 26))
       self.read(length=4, expect=struct.pack('<I', n))
-      for i in xrange(n):
+      for i in range(n):
         self.read(length=(8 + 10 + 2 * 4))
       n = (5 - n) * 26
       if n > 0:
-        self.read(length=n, expect='\x00'*n)
+        self.read(length=n, expect=b'\x00'*n)
       self.state['g_auth'] -= 1
     else:
       self.get_error()
@@ -142,7 +142,7 @@ class APPMS(Actions):
     tokens = []
     n = random.randint(0, 5)
 
-    for i in xrange(n):
+    for i in range(n):
       while True:
         lic = self.license_number()
         if lic not in lics:
@@ -161,28 +161,28 @@ class APPMS(Actions):
       token = self.permit_token()
       tokens.append(token)
 
-    cmd = struct.pack('<b16sI', CMD_REFACTOR_RING, '_SESSION_KEY_', n)
-    for i in xrange(n):
-      cmd += struct.pack('<8s10sII', tokens[i], lics[i], n_es[i], spots[i])
+    cmd = struct.pack('<b16sI', CMD_REFACTOR_RING, b'_SESSION_KEY_', n)
+    for i in range(n):
+      cmd += struct.pack('<8s10sII', tokens[i], lics[i].encode(), n_es[i], spots[i])
     ns = (5 - n) * 26
     if ns > 0:
-      cmd += '\x00' * ns
+      cmd += b'\x00' * ns
     cmd = struct.pack('<I', len(cmd)) + cmd
     self.write(cmd[:5], self.state['g_session_key'], cmd[21:])
 
     il = []
-    for i in xrange(n):
+    for i in range(n):
       if n_es[i] > 0:
         il.append(i)
 
     if self.state['g_auth'] > 0:
-      self.read(length=(1 + 4), expect='\x00' + struct.pack('<I', 4 + 5 * 26))
+      self.read(length=(1 + 4), expect=b'\x00' + struct.pack('<I', 4 + 5 * 26))
       self.read(length=4, expect=struct.pack('<I', len(il)))
       for i in il:
         self.read(length=(8 + 10 + 2 * 4))
       n = (5 - len(il)) * 26
       if n > 0:
-        self.read(length=n, expect='\x00'*n)
+        self.read(length=n, expect=b'\x00'*n)
       self.state['g_auth'] -= 1
     else:
       self.get_error()
@@ -197,7 +197,7 @@ class APPMS(Actions):
     if n_e == 0:
       valid = False
     spot = random.randint(1, MAX_SPOT_NUMBER)
-    cmd = struct.pack('<b16s8s10sIII10s', CMD_TEST_PERMIT, '_SESSION_KEY_', token, lic, n_e, spot, spot, lic)
+    cmd = struct.pack('<b16s8s10sIII10s', CMD_TEST_PERMIT, b'_SESSION_KEY_', token, lic.encode(), n_e, spot, spot, lic.encode())
     cmd = struct.pack('<I', len(cmd)) + cmd
     self.write(cmd[:5], self.state['g_session_key'], cmd[21:])
 
@@ -217,7 +217,7 @@ class APPMS(Actions):
     tokens = []
     n = random.randint(0, 5)
 
-    for i in xrange(n):
+    for i in range(n):
       while True:
         lic = self.license_number()
         if lic not in lics:
@@ -237,22 +237,22 @@ class APPMS(Actions):
       token = self.permit_token()
       tokens.append(token)
 
-    cmd = struct.pack('<b16sI', CMD_TEST_PERMIT_RING, '_SESSION_KEY_', n)
-    for i in xrange(n):
-      cmd += struct.pack('<8s10sII', tokens[i], lics[i], n_es[i], spots[i])
+    cmd = struct.pack('<b16sI', CMD_TEST_PERMIT_RING, b'_SESSION_KEY_', n)
+    for i in range(n):
+      cmd += struct.pack('<8s10sII', tokens[i], lics[i].encode(), n_es[i], spots[i])
     ns = (5 - n) * 26
     if ns > 0:
-      cmd += '\x00' * ns
-    for i in xrange(n):
+      cmd += b'\x00' * ns
+    for i in range(n):
       cmd += struct.pack('<I', spots[i])
     ns = (5 - n) * 4
     if ns > 0:
-      cmd += '\x00' * ns
-    for i in xrange(n):
-      cmd += struct.pack('10s', lics[i])
+      cmd += b'\x00' * ns
+    for i in range(n):
+      cmd += struct.pack('10s', lics[i].encode())
     ns = (5 - n) * 10
     if ns > 0:
-      cmd += '\x00' * ns
+      cmd += b'\x00' * ns
     cmd = struct.pack('<I', len(cmd)) + cmd
     self.write(cmd[:5], self.state['g_session_key'], cmd[21:])
 
