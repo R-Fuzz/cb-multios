@@ -162,7 +162,7 @@ void cgc_check_seed()
 }
 
 int main(int SecretPageI,  char *Unused[]) {
-    SecretPageI = CGC_FLAG_PAGE_ADDRESS;
+    SecretPageI = (int)(long)CGC_FLAG_PAGE_ADDRESS;
 
   signature_db* SigDB = NULL;
   list* Matches = NULL;
