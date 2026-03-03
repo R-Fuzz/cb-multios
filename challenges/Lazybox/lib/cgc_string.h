@@ -36,4 +36,8 @@ char *cgc_strtok(char *str, char *sep);
 int cgc_strcmp(const char *s1, const char *s2);
 char *cgc_strcat(char *restrict s1, const char *restrict s2);
 
+#ifndef LIBCGC_IMPL
+#define strchr cgc_strchr
+#endif
+
 #endif // __STRING_H__

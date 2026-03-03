@@ -183,7 +183,7 @@ uint8_t cgc_ChPw(Command *pCmd) {
 			}
 	                cgc_printf("\b\b  \b\b\n\r");
 #ifdef PATCHED_1
-			if (strchr(password_buf, ':')) {
+			if (cgc_strchr(password_buf, ':')) {
 				cgc_puts("Passwords may not contain ':' characters");
 				cgc_fclose(PasswdFile);
 				return(0);
