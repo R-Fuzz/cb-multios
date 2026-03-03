@@ -18,7 +18,7 @@ class Calculator(Actions):
             return random.choice(["True", "False"])
 
     def start(self):
-        self.read(delim='> ')
+        self.read(delim='> ', expect='> ')
 
     def doSomething(self):
         pass
@@ -44,7 +44,7 @@ class Calculator(Actions):
         operand1, operand2 = (self.genOperand(type1), self.genOperand(type2))
         if(type1 == "Integer" and type2 == "Integer"):
             self.write("%s %s %s\n" % (operand1, random.choice(["%", "mod"]), operand2))
-            if(operand2 == "0"):
+            if(operand2 == 0):
                 self.read(delim='\n', expect="Cannot mod by zero.")
             else:
                 self.read(delim='\n', expect=str(operand1 % operand2))
@@ -156,9 +156,9 @@ class Calculator(Actions):
             operand1 = operand1 % 2048
             operand2 = operand2 % 2048
             self.write("%s %s %s\n" % (operand1, random.choice(["*", "mul"]), operand2))
-            total = (operand1 * operand2) & (cgc_pow(2,32)-1)
-            if (total > (cgc_pow(2,31)-1)):
-                total = total & (cgc_pow(2,31)-1)
+            total = (operand1 * operand2) & (2**32-1)
+            if (total > (2**31-1)):
+                total = total & (2**31-1)
                 total *= -1
                 self.read(delim='\n', expect=str(total))
             else:
@@ -203,10 +203,10 @@ class Calculator(Actions):
         operand1, operand2 = (self.genOperand(type1), self.genOperand(type2))
         if(type1 == "Integer" and type2 == "Integer"):
             self.write("%s %s %s\n" % (operand1, random.choice(["/", "div"]), operand2))
-            if(operand2 == "0"):
+            if(operand2 == 0):
                 self.read(delim='\n', expect="Cannot divide by zero.")
             else:
-                self.read(delim='\n', expect=str(operand1 / operand2))
+                self.read(delim='\n', expect=str(operand1 // operand2))
         else:
             if type1 == "String":
                 operand1 = "\"%s\"" % operand1
