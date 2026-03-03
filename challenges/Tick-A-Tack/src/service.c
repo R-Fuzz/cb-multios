@@ -46,7 +46,7 @@ void cgc_do_select_char() {
     while(!player_char) {
         cgc_send(CHARCHOICE, cgc_strlen(CHARCHOICE));
         cgc_prompt_user(ROOTPROMPT, choice, 3, BADSTRERROR);
-        // syslog(LOG_DEBUG, "do_select_char: choice: ~o\n", choice[0]);
+        // cgc_syslog(LOG_DEBUG, "do_select_char: choice: ~o\n", choice[0]);
 
         if(choice[0] == 'P') {
             player_char = 'P';
@@ -57,7 +57,7 @@ void cgc_do_select_char() {
         }
     }
     cgc_set_player_chars(game->data, player_char);
-    if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "player: ~o\n", player_char);}
+    if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "player: ~o\n", player_char);}
 
 }
 
@@ -67,7 +67,7 @@ void cgc_send_current_board() {
     cgc_make_board(game->data, board);
 
     cgc_send(board, cgc_strlen(board));
-    if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, " board\n~c\n", board);}
+    if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, " board\n~c\n", board);}
 
 }
 
@@ -82,11 +82,11 @@ void cgc_make_move() {
         cgc_prompt_user(ROOTPROMPT, turn_coords, 5, BADSTRERROR);
         move.row = cgc_str2int(&turn_coords[0]);
         move.col = cgc_str2int(&turn_coords[2]);
-        if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "move_move(): player\n");}
+        if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "move_move(): player\n");}
     } else { 
         // else, cgc_select random, but valid coordinates for computer's move
         cgc_computer_move(game->data, &move);
-        if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "move_move(): computer\n");}
+        if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "move_move(): computer\n");}
         // inform player where computer moved
         // build move message
         // 23 letters/\n/\0 + 2 for 2 single digit numbers
@@ -97,11 +97,11 @@ void cgc_make_move() {
 
         // send computer move msg
         cgc_send(move_msg, cgc_strlen(move_msg));
-        if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "move_move(): send computer's move ~n ~n.\n", move.row, move.col);}
+        if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "move_move(): send computer's move ~n ~n.\n", move.row, move.col);}
 
     }
 
-    if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "move_move(): coords '~n', '~n'\n", move.row, move.col);}
+    if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "move_move(): coords '~n', '~n'\n", move.row, move.col);}
     // update board
     update_failed = cgc_update_board(game->data, &move);
 
@@ -111,11 +111,11 @@ void cgc_make_move() {
         if(cgc_is_players_turn(game->data)) {
             cgc_send(BADMOVE, cgc_strlen(BADMOVE));
         }
-        if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "move_move(): bad move\n");}
+        if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "move_move(): bad move\n");}
 
     } else {
         cgc_move_complete(game->data);
-        if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "move_move(): good move\n");}
+        if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "move_move(): good move\n");}
     }
 }
 
@@ -126,11 +126,11 @@ void cgc_send_game_results() {
     if(cgc_is_player_winner(game->data)) {
         // send congrats
         cgc_send(WIN, cgc_strlen(WIN));
-        if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "send_game_results(): player wins\n");}
+        if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "send_game_results(): player wins\n");}
     } else {
         // send loss msg
         cgc_send(LOSE, cgc_strlen(LOSE));
-        if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "send_game_results(): computer wins\n");}
+        if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "send_game_results(): computer wins\n");}
     }
 
     // build score message
@@ -142,7 +142,7 @@ void cgc_send_game_results() {
 
     // send final scores
     cgc_send(score_msg, cgc_strlen(score_msg));
-    if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "~c", score_msg);}
+    if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "~c", score_msg);}
 }
 
 // play one game and report final results
@@ -197,7 +197,7 @@ int main(int cgc_argc, char *cgc_argv[]) {
             game = (tt_game *)memory_idx;
 #endif
 
-            if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "Set game state.\n");}
+            if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "Set game state.\n");}
         } else if(!memory_base) {
             // alloc space and setup game state pointers
             int memory_size = sizeof(tt_game) + sizeof(tt_data) + sizeof(tt_scores);
@@ -213,7 +213,7 @@ int main(int cgc_argc, char *cgc_argv[]) {
             game->data = (tt_data *)memory_idx;
             memory_idx += sizeof(tt_data);
             game->scores = (tt_scores *)memory_idx;
-            if(LOGLEVEL == LOG_DEBUG) {syslog(LOG_DEBUG, "Allocate and set game state.\n");}
+            if(LOGLEVEL == LOG_DEBUG) {cgc_syslog(LOG_DEBUG, "Allocate and set game state.\n");}
         }
 
         // initialize game data
