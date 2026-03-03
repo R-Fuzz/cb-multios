@@ -175,7 +175,7 @@ void cgc_PrintStats(void) {
 	unsigned int bytes;
 	pkt *p;
 
-	cgc_printf("cgc_wall_clock: @f (s)\n", cgc_wall_clock);
+	cgc_printf("wall_clock: @f (s)\n", cgc_wall_clock);
 	for (i = 0; i < cgc_iface.num_queues; i++) {
 		cgc_printf("Queue @d\n", i);
 		cgc_printf("  Pkts Transmitted:       @d\n", cgc_iface.ifqueue[i]->total_pkts);
