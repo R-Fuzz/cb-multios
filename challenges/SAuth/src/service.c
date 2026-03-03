@@ -508,9 +508,8 @@ static int cgc_handle_service_request(server_t *server)
 }
 
 int main(int secret_page_i,  char *unused[]) {
-    secret_page_i = CGC_FLAG_PAGE_ADDRESS;
 
-    void *secret_page = (void *)secret_page_i;
+    void *secret_page = (void *)CGC_FLAG_PAGE_ADDRESS;
     server_t server;
 
     cgc_memset(&server, 0, sizeof(server));
