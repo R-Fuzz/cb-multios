@@ -27,10 +27,10 @@ from random import choice, randint
 from os.path import join
 
 def random_alpha(a, b):
-    return ''.join(choice(string.letters) for _ in range(randint(a, b)))
+    return ''.join(choice(string.ascii_letters) for _ in range(randint(a, b)))
 
 def random_string(a, b):
-    chars = string.letters + string.digits
+    chars = string.ascii_letters + string.digits
     return ''.join(choice(chars) for _ in range(randint(a, b)))
 
 def random_digits(a, b):
@@ -132,7 +132,7 @@ class MultiPassSupport(object):
 			char * vendor_location;
 		} vendor_t;
 		'''
-		for name, val in self.VENDOR_TYPE.iteritems():
+		for name, val in self.VENDOR_TYPE.items():
 			# 0 < vls < 256
 			vls = randint(10, 255)
 
@@ -512,12 +512,15 @@ class MultiPassSupport(object):
 	def pack_packet_data_recharge(self, recharge_data):
 		recharge_data_fmt = 'IIBB' + str(recharge_data['vendor_location_sz']) + 's'
 
+		loc = recharge_data['vendor_location']
+		if isinstance(loc, str):
+			loc = loc.encode('latin-1')
 		return struct.pack(recharge_data_fmt, 
 							recharge_data['amount'],
 							recharge_data['vendor_id'],
 							recharge_data['vendor_type'],
 							recharge_data['vendor_location_sz'],
-							recharge_data['vendor_location']
+							loc
 							)
 
 	def make_packet_data_purchase(self, cost):
@@ -547,13 +550,16 @@ class MultiPassSupport(object):
 	def pack_packet_data_purchase(self, purchase_data):
 		purchase_data_fmt = 'IIIBB' + str(purchase_data['vendor_location_sz']) + 's'
 
+		loc = purchase_data['vendor_location']
+		if isinstance(loc, str):
+			loc = loc.encode('latin-1')
 		return struct.pack(purchase_data_fmt, 
 							purchase_data['purchase_id'],
 							purchase_data['cost'],
 							purchase_data['vendor_id'],
 							purchase_data['vendor_type'],
 							purchase_data['vendor_location_sz'],
-							purchase_data['vendor_location']
+							loc
 							)
 
 	def make_packet_data_history(self, count):
@@ -595,4 +601,7 @@ class MultiPassSupport(object):
 
 	def pack_packet_data_error(self, error_data):
 		error_data_fmt = 'I' + str(error_data['length']) + 's'
-		return struct.pack(error_data_fmt, error_data['length'], error_data['msg'])
+		msg = error_data['msg']
+		if isinstance(msg, str):
+			msg = msg.encode('latin-1')
+		return struct.pack(error_data_fmt, error_data['length'], msg)

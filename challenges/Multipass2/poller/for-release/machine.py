@@ -32,10 +32,10 @@ sys.path.append(join(dirname(dirname(dirname(abspath(__file__)))), "support"))
 from multipasssupport import MultiPassSupport
 
 def random_alpha(a, b):
-    return ''.join(choice(string.letters) for _ in range(randint(a, b)))
+    return ''.join(choice(string.ascii_letters) for _ in range(randint(a, b)))
 
 def random_string(a, b):
-    chars = string.letters + string.digits
+    chars = string.ascii_letters + string.digits
     return ''.join(choice(chars) for _ in range(randint(a, b)))
 
 def random_digits(a, b):
@@ -54,7 +54,7 @@ class MultiPass(Actions):
 	DEBUG_PURCHASE = DEBUG or False
 	DEBUG_HISTORY = DEBUG or False
 	DEBUG_REFUND = DEBUG or False
-	MAX_UINT32 = 2 * sys.maxint + 1
+	MAX_UINT32 = 0xFFFFFFFF
 
 	def start(self):
 		self.state['mp'] = MultiPassSupport()

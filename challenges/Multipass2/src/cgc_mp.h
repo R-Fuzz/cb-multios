@@ -57,11 +57,11 @@ typedef enum {
 
 
 typedef struct vendor {
-	uint32_t vendor_id;			
+	uint32_t vendor_id;
 	VENDOR_TYPE vendor_type : 8;
 	uint8_t vendor_location_sz;
 	char * vendor_location;
-} vendor_t;
+} __attribute__((packed)) vendor_t;
 
 typedef struct packet_head {
 	uint32_t card_id;			// 4 bytes
@@ -93,12 +93,12 @@ typedef struct packet_data_purchase {
 	uint32_t purchase_id;
 	uint32_t cost;
 	vendor_t v;
-} packet_data_purchase_t;
+} __attribute__((packed)) packet_data_purchase_t;
 
 typedef struct packet_data_recharge {
 	uint32_t amount;
 	vendor_t v;
-} packet_data_recharge_t;
+} __attribute__((packed)) packet_data_recharge_t;
 
 typedef struct packet_data_refund {
 	uint32_t purchase_id;
@@ -109,10 +109,11 @@ typedef struct transaction {
 	OP_CODE op_code : 8;
 	PKT_TYPE state : 8;
 	STATUS status : 8;
+	STATUS _unused : 8;  /* pad bitfield to 4 bytes for 64-bit compat */
 	uint32_t card_id;
 	uint32_t transaction_id;
 	void * details;
-} transaction_t;
+} __attribute__((packed)) transaction_t;
 
 typedef struct card {
 	uint32_t card_id;
