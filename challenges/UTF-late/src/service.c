@@ -86,7 +86,7 @@ static int
 cgc_write_file(void)
 {
     struct file *file;
-    cgc_size_t size;
+    unsigned int size;
     utf8char filename[MAX_FILE_NAME_LENGTH + 1];
     utf8char path[MAX_PATH_LENGTH];
 

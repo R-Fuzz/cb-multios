@@ -45,6 +45,8 @@ class UtfLate(Actions):
     def valid_read_file(self):
         name = self.state['model'].get_filename()
         if not name:
+            # No files yet - do an invalid read instead
+            self.invalid_read_file()
             return
         exp = self.state['model'].read_file(name)
         if exp is not None:
@@ -61,26 +63,29 @@ class UtfLate(Actions):
         pass
 
     def valid_write_file(self):
-        name = self.state['model'].get_filename()
-        if not name:
-            return
+        name = self.state['model'].get_new_filename()
         contents = self.state['model'].get_new_contents()
-        exp = self.state['model'].write_file(name, contents)
-        if exp:
-            self.write(self.state['model'].make_write_file(name, len(contents), contents))
-            self.read(length=len(self.SUCCESS), expect=self.SUCCESS)
+        self.state['model'].write_file(name, contents)
+        self.write(self.state['model'].make_write_file(name, len(contents), contents))
+        self.read(length=len(self.SUCCESS), expect=self.SUCCESS)
 
     def invalid_write_file(self):
         name = self.state['model'].get_filename()
         if not name:
-            return
-        contents = ''
-        self.write(self.state['model'].make_write_file(name, len(contents), contents))
+            # No files yet - write a new file twice to trigger duplicate error
+            name = self.state['model'].get_new_filename()
+            contents = self.state['model'].get_new_contents()
+            self.state['model'].write_file(name, contents)
+            # Write it again - should fail
+            self.write(self.state['model'].make_write_file(name, len(contents), contents))
+        else:
+            contents = b''
+            self.write(self.state['model'].make_write_file(name, len(contents), contents))
         self.read(length=len(self.FAILURE), expect=self.FAILURE)
 
     def too_big_write_file(self):
         name = self.state['model'].get_new_filename()
-        self.write(self.state['model'].make_write_file(name, 2 * self.state['model'].MAX_FILE_SIZE, ''))
+        self.write(self.state['model'].make_write_file(name, 2 * self.state['model'].MAX_FILE_SIZE, b''))
         self.read(length=len(self.FAILURE), expect=self.FAILURE)
 
     def list_files(self):

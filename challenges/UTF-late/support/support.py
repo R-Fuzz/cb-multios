@@ -28,7 +28,8 @@ class Support(object):
     MAX_FILE_SIZE = 4088
 
     def random_alpha(self, a, b):
-        return ''.join(random.choice(string.letters) for _ in range(random.randint(a, b)))
+        letters = string.ascii_letters
+        return ''.join(random.choice(letters) for _ in range(random.randint(a, b)))
 
     def __init__(self):
         self.files = {}
@@ -38,10 +39,10 @@ class Support(object):
         return name if name not in self.files else self.get_new_name()
 
     def get_new_contents(self):
-        return self.random_alpha(1, self.MAX_FILE_SIZE)
+        return self.random_alpha(1, self.MAX_FILE_SIZE).encode('latin-1')
 
     def get_filename(self):
-        return random.choice(self.files.keys()) if self.files else None
+        return random.choice(list(self.files.keys())) if self.files else None
 
     def read_file(self, name):
         if name in self.files:
@@ -57,15 +58,19 @@ class Support(object):
             return False
 
     def pad_filename(self, name):
-        return name + '\x00' * (self.MAX_FILE_NAME_LENGTH - len(name))
+        if isinstance(name, str):
+            name = name.encode('latin-1')
+        return name + b'\x00' * (self.MAX_FILE_NAME_LENGTH - len(name))
 
     def list_files(self):
-        return ''.join(self.pad_filename(f) for f in self.files)
+        return b''.join(self.pad_filename(f) for f in self.files)
 
     def make_read_file(self, name):
         return struct.pack('<I', 0) + self.pad_filename(name)
 
     def make_write_file(self, name, length, contents):
+        if isinstance(contents, str):
+            contents = contents.encode('latin-1')
         return struct.pack('<I', 1) + self.pad_filename(name) + \
                 struct.pack('<I', length) + contents
 
