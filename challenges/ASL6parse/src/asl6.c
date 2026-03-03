@@ -177,9 +177,9 @@ static int cgc_append_sub(element *e, element *sub)
 }
 
 // Decoder
-static int cgc_within(uint8_t *b, unsigned length, unsigned st, unsigned sp)
+static int cgc_within(uint8_t *b, unsigned length, uintptr_t st, uintptr_t sp)
 {
-  unsigned bu = (unsigned) b;
+  uintptr_t bu = (uintptr_t) b;
   if (bu < st || bu >= sp)
     return -1;
 #ifdef PATCHED
@@ -190,7 +190,7 @@ static int cgc_within(uint8_t *b, unsigned length, unsigned st, unsigned sp)
     return 0;
 }
 
-element *cgc__decode(uint8_t *b, unsigned depth, unsigned st, unsigned sp)
+element *cgc__decode(uint8_t *b, unsigned depth, uintptr_t st, uintptr_t sp)
 {
   if (cgc_within(b, 0, st, sp) != 0) {
     DBG("b = %x, st = %x, sp = %x\n", b, st, sp);
@@ -272,7 +272,7 @@ element *cgc__decode(uint8_t *b, unsigned depth, unsigned st, unsigned sp)
       DBG("content parsing consumed %d bytes", sub->length);
 
       cur = sub->data + sub->length;
-      if ((unsigned) cur < st || cur >= e->data + e->length)
+      if ((uintptr_t) cur < st || cur >= e->data + e->length)
         break;
 
     }
@@ -291,9 +291,9 @@ ERROR:
   return NULL;
 }
 
-element *cgc_decode(uint8_t *b, unsigned end)
+element *cgc_decode(uint8_t *b, uintptr_t end)
 {
-  return cgc__decode(b, 0, (unsigned) b, end);
+  return cgc__decode(b, 0, (uintptr_t) b, end);
 }
 
 // Pretty Printers

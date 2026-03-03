@@ -66,7 +66,7 @@ int main(int cgc_argc, char *cgc_argv[])
   if (cgc_read_exactly(STDIN, buf, size) != 0)
     cgc_exit(1);
 
-  element *e = cgc_decode(buf, (unsigned) buf + size);
+  element *e = cgc_decode(buf, (uintptr_t) buf + size);
   if (e == NULL)
     cgc_exit(1);
 

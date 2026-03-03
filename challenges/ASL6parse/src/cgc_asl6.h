@@ -86,6 +86,6 @@ typedef enum {
   BMPSTR = 30
 } utag;
 
-element *cgc_decode(uint8_t *b, unsigned max);
+element *cgc_decode(uint8_t *b, uintptr_t max);
 void cgc_pprint(element *e);
 #endif /* __ASL6_H__ */
