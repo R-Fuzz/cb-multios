@@ -51,8 +51,8 @@ void *cgc_calloc( cgc_size_t count, cgc_size_t obj_size )
 
 void *cgc_add_free_list( cgc_size_t request_size )
 {
-    // Include header
-    cgc_size_t grow_size = (request_size + 4);
+    // Include header (use sizeof(tMallocAllocHdr) to work on both 32-bit and 64-bit)
+    cgc_size_t grow_size = (request_size + sizeof(tMallocAllocHdr));
 
     // Increases the size of the free list
     if ( grow_size % ALLOC_PAGE_SIZE != 0 )
@@ -86,8 +86,10 @@ void *cgc_add_free_list( cgc_size_t request_size )
 void *cgc_malloc( cgc_size_t alloc_size )
 {
     // Allocate
-    if ( alloc_size < 8 )
-        alloc_size = 8;
+    // Minimum must be sizeof(tMallocAllocFtr) so the footer doesn't overlap the header
+    // On 32-bit: sizeof(tMallocAllocFtr)=8; on 64-bit: sizeof(tMallocAllocFtr)=16
+    if ( alloc_size < sizeof(tMallocAllocFtr) )
+        alloc_size = sizeof(tMallocAllocFtr);
     else if ( alloc_size % 4 != 0 )
     {
         alloc_size = (alloc_size >> 2) + 1;
