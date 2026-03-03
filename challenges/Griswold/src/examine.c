@@ -95,7 +95,7 @@ static uint8_t cgc_is_too_many_outlets_on_breaker(uint32_t breaker_id) {
  *  Too much amp load: TRUE
  *  Not too much amp load: FALSE
  */
-static uint8_t cgc_is_too_much_amp_load_on_outlet(outlet_id) {
+static uint8_t cgc_is_too_much_amp_load_on_outlet(uint32_t outlet_id) {
 	if (cgc_get_total_amp_load_on_outlet_by_outlet_id(outlet_id) > (0.8 * (float)cgc_get_amp_rating_of_outlet(outlet_id))) {
 		return TRUE;
 	} else {
@@ -112,7 +112,7 @@ static uint8_t cgc_is_too_much_amp_load_on_outlet(outlet_id) {
  *  Too much amp load: TRUE
  *  Not too much amp load: FALSE
  */
-static uint8_t cgc_is_too_much_amp_load_on_one_outlet_receptacle(outlet_id) {
+static uint8_t cgc_is_too_much_amp_load_on_one_outlet_receptacle(uint32_t outlet_id) {
 	if (cgc_get_max_receptacle_amp_load_on_outlet_by_outlet_id(outlet_id) > (0.8 * (float)cgc_get_amp_rating_of_outlet(outlet_id))) {
 		return TRUE;
 	} else {
@@ -129,7 +129,7 @@ static uint8_t cgc_is_too_much_amp_load_on_one_outlet_receptacle(outlet_id) {
  *  Too much amp load: TRUE
  *  Not too much amp load: FALSE
  */
-static uint8_t cgc_is_too_much_amp_load_on_splitter(splitter_id) {
+static uint8_t cgc_is_too_much_amp_load_on_splitter(uint32_t splitter_id) {
 	if (cgc_get_total_amp_load_on_splitter_by_splitter_id(splitter_id) > (0.8 * (float)cgc_get_amp_rating_of_splitter(splitter_id))) {
 		return TRUE;
 	} else {
@@ -146,7 +146,7 @@ static uint8_t cgc_is_too_much_amp_load_on_splitter(splitter_id) {
  *  Too much amp load: TRUE
  *  Not too much amp load: FALSE
  */
- static uint8_t cgc_is_too_much_amp_load_on_one_splitter_receptacle(splitter_id) {
+ static uint8_t cgc_is_too_much_amp_load_on_one_splitter_receptacle(uint32_t splitter_id) {
 	if (cgc_get_max_receptacle_amp_load_on_splitter_by_splitter_id(splitter_id) > (0.8 * (float)cgc_get_amp_rating_of_splitter(splitter_id))) {
 		return TRUE;
 	} else {
@@ -163,7 +163,7 @@ static uint8_t cgc_is_too_much_amp_load_on_splitter(splitter_id) {
  *  Too much amp load: TRUE
  *  Not too much amp load: FALSE
  */
-static uint8_t cgc_is_too_much_amp_load_on_light_string(light_string_id) {
+static uint8_t cgc_is_too_much_amp_load_on_light_string(uint32_t light_string_id) {
 	if (cgc_get_total_amp_load_on_light_string_by_light_string_id(light_string_id) > cgc_get_amp_rating_of_light_string(light_string_id)) {
 		return TRUE;
 	} else {
@@ -180,7 +180,7 @@ static uint8_t cgc_is_too_much_amp_load_on_light_string(light_string_id) {
  *  Too much amp load: TRUE
  *  Not too much amp load: FALSE
  */
-static uint8_t cgc_is_too_much_amp_load_on_receptacle(receptacle_id) {
+static uint8_t cgc_is_too_much_amp_load_on_receptacle(uint32_t receptacle_id) {
 	if (cgc_get_total_amp_load_on_receptacle_by_receptacle_id(receptacle_id) > (float)cgc_get_amp_rating_of_receptacle(receptacle_id)) {
 		return TRUE;
 	} else {
