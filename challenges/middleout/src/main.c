@@ -45,7 +45,7 @@ typedef uint64_t u64;
   cgc_exit(1); \
 })
 
-static cgc_size_t end_marker = 0xDEEDACED;
+static uint32_t end_marker = 0xDEEDACED;
 
 // calloc or crash
 void *cgc_mcalloc(cgc_size_t size)
@@ -520,7 +520,7 @@ static inline cgc_size_t clamp_sub(cgc_size_t x, cgc_size_t y, cgc_size_t min)
     return x - y;
 }
 
-static inline cgc_size_t min(a, b) {
+static inline cgc_size_t min(cgc_size_t a, cgc_size_t b) {
   return a > b ? b : a;
 }
 
