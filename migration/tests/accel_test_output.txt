@@ -1,0 +1,8 @@
+Running tests against 1 challenge(s)
+
+Testing Accel...
+POLL:
+	for-release:	Running 200 test(s)
+WARNING: test(s) timed out
+WARNING: test(s) timed out => Passed 200/200
+Done testing Accel => Passed 200/200 tests

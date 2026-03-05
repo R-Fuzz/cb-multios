@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE pov SYSTEM "/usr/share/cgc-docs/replay.dtd">
+<pov>
+<cbid>service</cbid>
+<seed>fa22e5205326ac35470b565d8b74e2af9febf1e64a9d7423f2d241148935b663bfb3a395775b27205d25de85051ef30c</seed>
+<replay>
+    <read><length>124</length><match><data>\x0aWelcome to the Enslavednode chat server!\x0aThe bots here love to talk\x2c but they are shy...\x0aYou need to get the ball rolling.\x0a</data></match></read>
+    <read><delim>you \x3e </delim><match><pcre>.*</pcre></match></read>
+    <write><data>/hello test\x0a</data></write>
+    <read><delim>\x0a</delim><match><data>case \x3e Hello\x2c you.</data></match></read>
+    <read><delim>you \x3e </delim><match><pcre>.*</pcre></match></read>
+    <write><data>/part\x0a</data></write>
+    <read><delim>\x0a</delim><match><data>BYE!</data></match></read>
+</replay>
+</pov>
