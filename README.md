@@ -179,6 +179,66 @@ We use the CMake build system to enable portability across different compilers a
 
 We are working to make this repository easier to use for the evaluation of program analysis tools. If you have questions about the challenge binaries, please [join our Slack](https://empireslacking.herokuapp.com) and we'll be happy to answer them.
 
+## 64-bit Support
+
+Full 64-bit support has been added and validated. All single-CB challenges pass their poll tests on x86-64.
+
+### Building
+
+```bash
+$ BUILD64=1 ./build.sh
+```
+
+Rebuilding after source changes:
+
+```bash
+$ cmake --build build64/
+```
+
+### What Was Fixed
+
+Three critical bug classes were discovered and fixed during the 64-bit porting effort:
+
+1. **x86-64 ABI violation in `maths64.S`** — All 16 math functions (sin, cos, sqrt, pow, etc.) computed correctly in the x87 FPU but returned values in `st(0)` instead of `xmm0` as required by the System V x86-64 calling convention. This caused all 90 math-using challenges to produce incorrect results. Fixed by adding `fstpl (%rsp); movsd (%rsp), %xmm0` to each function.
+
+2. **`intptr_t` type size** — `intptr_t` was defined as 32-bit `int` in 72 challenge-local `cgc_stdint.h` files, causing sign-extended pointer arithmetic (e.g., `0xfffffffff7a64030` instead of `0x7ffff7a64030`). Fixed with architecture-conditional `#ifdef __x86_64__`.
+
+3. **`HEADER_PADDING` in custom malloc** — 18 challenges had a hardcoded `HEADER_PADDING=24` in their `cgc_malloc.h`, correct for 32-bit `struct blk_t` (24 bytes) but wrong for 64-bit (48 bytes). This caused heap corruption. Fixed with architecture-conditional sizing.
+
+Additional per-challenge fixes were applied for pointer-size assumptions, struct serialization, and `cgc_size_t` usage in network protocols. See `migration/docs/` for detailed reports.
+
+### Test Results
+
+| Scope | Tests | Passed | Rate |
+|-------|-------|--------|------|
+| Single-CB challenges with polls | 180 | 180 | 100% |
+| Math function unit tests | 67 | 67 | 100% |
+| Multi-CB challenges | 13 | — | timeout-sensitive |
+
+Multi-CB challenges may require extended timeouts (`--timeout 60` or higher) due to IPC pipe overhead.
+
+### Python 3 Migration
+
+The test infrastructure (`tools/`) was migrated from Python 2 to Python 3. Use a virtualenv:
+
+```bash
+$ python3 -m venv venv
+$ source venv/bin/activate
+$ pip install xlsxwriter pycrypto defusedxml pyyaml matplotlib
+$ python tools/tester.py --all --polls --build-dir build64
+```
+
+### Migration Documentation
+
+All migration artifacts are in the `migration/` directory:
+
+- `migration/docs/` — Debug reports and technical analysis for individual challenges
+- `migration/scripts/` — GDB scripts, test runners, automated fix scripts
+- `migration/SCRIPTS.md` — Reference guide for all scripts
+- `migration/tests/` — Unit test source for maths64.S validation
+
 ## Authors
 
 Porting work was completed by Kareem El-Faramawi and Loren Maggiore, with help from Artem Dinaburg, Peter Goodman, Ryan Stortz, and Jay Little. Challenges were originally created by NARF Industries, Kaprica Security, Chris Eagle, Lunge Technology, Cromulence, West Point Military Academy, Thought Networks, and Air Force Research Labs while under contract for the DARPA Cyber Grand Challenge.
+
+64-bit porting and Python 3 migration by Chengyu Song, with assistance from Claude Code.
