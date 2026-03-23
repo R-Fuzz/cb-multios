@@ -83,6 +83,14 @@ function(build path target)
     aux_source_directory(${path}/include cb_inc)
     set(cb_all_src ${cb_lib} ${cb_src} ${cb_inc})
 
+    # ASAN malloc replacement: prepend asan_malloc.c which provides
+    # cgc_malloc/cgc_free/cgc_calloc/cgc_realloc as libc wrappers.
+    # With --allow-multiple-definition the FIRST definition wins,
+    # so asan_malloc.c must come before the challenge's allocator.
+    if(USE_ASAN_MALLOC)
+        set(cb_all_src "${CMAKE_SOURCE_DIR}/include/asan_malloc.c" ${cb_all_src})
+    endif()
+
     # Include the main() wrapper that passes CGC_FLAG_PAGE_ADDRESS as argc.
     # This is compiled into each challenge binary (not libcgc.so) so that
     # --wrap=main works correctly at link time.
@@ -108,6 +116,12 @@ function(build path target)
 
     target_link_libraries(${target} LINK_PUBLIC cgc)
     target_link_libraries(${target}_patched LINK_PUBLIC cgc)
+
+    # ASAN: allow our asan_malloc.c to override challenge's allocator symbols
+    if(USE_ASAN_MALLOC)
+        target_link_options(${target} PRIVATE -Wl,--allow-multiple-definition)
+        target_link_options(${target}_patched PRIVATE -Wl,--allow-multiple-definition)
+    endif()
 
     # Wrap main() so that CGC_FLAG_PAGE_ADDRESS is passed as argc,
     # matching the DECREE convention where the OS put the flag page
@@ -152,6 +166,13 @@ function(buildPOV path cb pov)
         RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}
     )
+
+    # PoVs must NOT be instrumented by ASAN — they use libpov's own allocator.
+    # But they still link against ASAN-built shared libs (libcgc, libpov),
+    # so we keep the sanitizer at link time but disable instrumentation.
+    if(USE_ASAN_MALLOC)
+        target_compile_options(${target} PRIVATE -fno-sanitize=address,undefined)
+    endif()
 
     target_link_libraries(${target} LINK_PUBLIC cgc pov)
 endfunction(buildPOV)
