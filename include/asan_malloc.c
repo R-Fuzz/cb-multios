@@ -40,3 +40,28 @@ cgc_size_t cgc_malloc_size(void *heap, void *ptr)
         return 0;
     return (cgc_size_t)malloc_usable_size(ptr);
 }
+
+/*
+ * Intercept cgc_allocate/cgc_deallocate so ASAN can track buffers
+ * that challenges allocate via the CGC syscall-level allocator.
+ * Without this, cgc_allocate goes through mmap and ASAN has no
+ * shadow metadata, so overflows manifest as SEGV instead of
+ * heap-buffer-overflow.
+ */
+int cgc_allocate(cgc_size_t length, int is_executable, void **addr)
+{
+    (void)is_executable;
+    void *p = calloc(1, (size_t)length);
+    if (!p)
+        return -1;
+    if (addr)
+        *addr = p;
+    return 0;
+}
+
+int cgc_deallocate(void *addr, cgc_size_t length)
+{
+    (void)length;
+    free(addr);
+    return 0;
+}
