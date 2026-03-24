@@ -32,7 +32,7 @@ IoManager::IoManager(cgc_size_t _line_size)
 
 IoManager::~IoManager()
 {
-    delete line;
+    delete[] line;
     line_size = 0;
     line_len = 0;
 }

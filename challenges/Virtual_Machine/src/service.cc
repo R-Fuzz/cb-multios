@@ -73,7 +73,7 @@ int main(int secret_page_i,  char *unused[]) {
 	}
 
 	// Delete file -- not needed anymore
-	delete pLoaderFile;
+	delete[] pLoaderFile;
 
 	CVM oVM( secret_page );
 

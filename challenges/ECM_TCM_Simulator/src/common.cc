@@ -115,7 +115,7 @@ CUtil::String ReadLine( void )
 
         CUtil::String sLine = pszLine;
 
-        delete pszLine;
+        delete[] pszLine;
 
         uint32_t copyToPos = 0;
         uint32_t copyFromPos = lastScanPos+1;

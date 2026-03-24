@@ -909,7 +909,7 @@ struct VC
       (*CalcStack)[RIndex] = Temp;
     }
 
-    delete RBuf;
+    delete[] RBuf;
     return ADD_HISTORY;
   }
 

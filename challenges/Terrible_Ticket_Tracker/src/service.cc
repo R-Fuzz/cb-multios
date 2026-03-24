@@ -293,7 +293,7 @@ COMMAND read_command(FILE* f, char*** components, cgc_size_t* num_components)
     }
     else
     {
-      delete component;
+      delete[] component;
       break;
     }
   }

@@ -46,7 +46,7 @@ CTimeGen::CTimeGen( uint32_t *pGeneratorSource, uint32_t generatorSize )
 CTimeGen::~CTimeGen( )
 {
 	if ( m_pGeneratorSource )
-		delete m_pGeneratorSource;
+		delete[] m_pGeneratorSource;
 }
 
 uint32_t CTimeGen::GetUnixTimestamp( void )

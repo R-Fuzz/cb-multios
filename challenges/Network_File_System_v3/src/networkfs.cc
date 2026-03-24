@@ -208,8 +208,8 @@ void CNetworkFS::HandleCFSLogin( void )
 
 	if ( m_pComms->RecvData( (uint8_t*)pszUsername, oLoginHdr.usernameLen ) != oLoginHdr.usernameLen )
 	{
-		delete pszUsername;
-		delete pszPassword;
+		delete[] pszUsername;
+		delete[] pszPassword;
 
 		SetError( "Login read error" );
 		return;
@@ -219,8 +219,8 @@ void CNetworkFS::HandleCFSLogin( void )
 
 	if ( m_pComms->RecvData( (uint8_t*)pszPassword, oLoginHdr.passwordLen ) != oLoginHdr.passwordLen )
 	{
-		delete pszUsername;
-		delete pszPassword;
+		delete[] pszUsername;
+		delete[] pszPassword;
 
 		SetError( "Login read error" );
 		return;
@@ -231,8 +231,8 @@ void CNetworkFS::HandleCFSLogin( void )
 	CUtil::String sUsername = pszUsername;
 	CUtil::String sPassword = pszPassword;
 
-	delete pszUsername;
-	delete pszPassword;
+	delete[] pszUsername;
+	delete[] pszPassword;
 	
 	// Validate login!
 	bool bLoginValid = m_pFS->SetUser( sUsername, sPassword );
@@ -342,7 +342,7 @@ void CNetworkFS::HandleCFSDir( void )
 	// Send pos worth of data for response
 	SendResponse( REQUEST_CFS_DIR, RESPONSE_SUCCESS, (uint8_t*)pszFileList, pos );
 
-	delete pszFileList;
+	delete[] pszFileList;
 }
 
 void CNetworkFS::HandleCFSRead( void )
@@ -373,7 +373,7 @@ void CNetworkFS::HandleCFSRead( void )
 	// Read in filename
 	if ( m_pComms->RecvData( (uint8_t*)pszFilename, oReadHdr.fileNameLength ) != oReadHdr.fileNameLength )
 	{
-		delete pszFilename;
+		delete[] pszFilename;
 
 		SetError( "Read read error" );
 		return;
@@ -382,7 +382,7 @@ void CNetworkFS::HandleCFSRead( void )
 	pszFilename[oReadHdr.fileNameLength] = '\0';
 
 	CUtil::String sFilename = pszFilename;
-	delete pszFilename;
+	delete[] pszFilename;
 
 	// Open file
 	CDBFSOpenFile *pFP = m_pFS->OpenFile( sFilename, "r" );
@@ -409,7 +409,7 @@ void CNetworkFS::HandleCFSRead( void )
 	if ( m_pFS->FileRead( pReadData, oReadHdr.readLength, 1, pFP ) == 0 )
 	{
 		// Read failure
-		delete pReadData;
+		delete[] pReadData;
 
 		SendResponse( REQUEST_CFS_READ, RESPONSE_SYSTEM_FAILURE, NULL, 0 );
 
@@ -453,8 +453,8 @@ void CNetworkFS::HandleCFSWrite( void )
 	// Read in filename
 	if ( m_pComms->RecvData( (uint8_t*)pszFilename, oWriteHdr.fileNameLength ) != oWriteHdr.fileNameLength )
 	{
-		delete pszFilename;
-		delete pData;
+		delete[] pszFilename;
+		delete[] pData;
 
 		SetError( "Write read error" );
 		return;
@@ -464,22 +464,22 @@ void CNetworkFS::HandleCFSWrite( void )
 
 	if ( m_pComms->RecvData( pData, oWriteHdr.writeLength ) != oWriteHdr.writeLength )
 	{
-		delete pszFilename;
-		delete pData;
+		delete[] pszFilename;
+		delete[] pData;
 
 		SetError( "Write read error" );
 		return;
 	}
 
 	CUtil::String sFilename = pszFilename;
-	delete pszFilename;
+	delete[] pszFilename;
 
 	// Open file
 	CDBFSOpenFile *pFP = m_pFS->OpenFile( sFilename, "w" );
 
 	if ( !pFP )
 	{
-		delete pData;
+		delete[] pData;
 
 		SendResponse( REQUEST_CFS_WRITE, RESPONSE_INVALID_FILE, NULL, 0 );
 
@@ -489,7 +489,7 @@ void CNetworkFS::HandleCFSWrite( void )
 	// Seek
 	if ( m_pFS->FileSeek( pFP, 0, SEEK_SET ) != 0 )
 	{
-		delete pData;
+		delete[] pData;
 
 		SendResponse( REQUEST_CFS_WRITE, RESPONSE_SYSTEM_FAILURE, NULL, 0 );
 
@@ -501,7 +501,7 @@ void CNetworkFS::HandleCFSWrite( void )
 	if ( m_pFS->FileWrite( pData, oWriteHdr.writeLength, 1, pFP ) == 0 )
 	{
 		// Write failure
-		delete pData;
+		delete[] pData;
 
 		SendResponse( REQUEST_CFS_WRITE, RESPONSE_SYSTEM_FAILURE, NULL, 0 );
 
@@ -509,7 +509,7 @@ void CNetworkFS::HandleCFSWrite( void )
 	}
 
 	// Free buffer
-	delete pData;
+	delete[] pData;
 
 	// Close file
 	m_pFS->CloseFile( pFP );
@@ -548,8 +548,8 @@ void CNetworkFS::HandleCFSWriteAppend( void )
 	// Read in filename
 	if ( m_pComms->RecvData( (uint8_t*)pszFilename, oWriteAppendHdr.fileNameLength ) != oWriteAppendHdr.fileNameLength )
 	{
-		delete pData;
-		delete pszFilename;
+		delete[] pData;
+		delete[] pszFilename;
 
 		SetError( "Write append read error" );
 		return;
@@ -560,22 +560,22 @@ void CNetworkFS::HandleCFSWriteAppend( void )
 	// Read data
 	if ( m_pComms->RecvData( pData, oWriteAppendHdr.dataLen ) != oWriteAppendHdr.dataLen )
 	{
-		delete pData;
-		delete pszFilename;
+		delete[] pData;
+		delete[] pszFilename;
 
 		SetError( "Write append read error" );
 		return;
 	}
 
 	CUtil::String sFilename = pszFilename;
-	delete pszFilename;
+	delete[] pszFilename;
 
 	// Open file (in append mode)
 	CDBFSOpenFile *pFP = m_pFS->OpenFile( sFilename, "a" );
 
 	if ( !pFP )
 	{
-		delete pData;
+		delete[] pData;
 
 		SendResponse( REQUEST_CFS_WRITE_APPEND, RESPONSE_INVALID_FILE, NULL, 0 );
 
@@ -586,7 +586,7 @@ void CNetworkFS::HandleCFSWriteAppend( void )
 	if ( m_pFS->FileWrite( pData, oWriteAppendHdr.dataLen, 1, pFP ) == 0 )
 	{
 		// Write failure
-		delete pData;
+		delete[] pData;
 
 		SendResponse( REQUEST_CFS_WRITE_APPEND, RESPONSE_SYSTEM_FAILURE, NULL, 0 );
 
@@ -594,7 +594,7 @@ void CNetworkFS::HandleCFSWriteAppend( void )
 	}
 	
 	// Free buffer
-	delete pData;
+	delete[] pData;
 
 	// Close file
 	m_pFS->CloseFile( pFP );
@@ -629,7 +629,7 @@ void CNetworkFS::HandleCFSDel( void )
 	// Read in filename
 	if ( m_pComms->RecvData( (uint8_t*)pszFilename, oDeleteHdr.fileNameLength ) != oDeleteHdr.fileNameLength )
 	{
-		delete pszFilename;
+		delete[] pszFilename;
 
 		SetError( "Delete read error" );
 		return;
@@ -638,7 +638,7 @@ void CNetworkFS::HandleCFSDel( void )
 	pszFilename[oDeleteHdr.fileNameLength] = '\0';
 
 	CUtil::String sFilename = pszFilename;
-	delete pszFilename;
+	delete[] pszFilename;
 
 	if ( !m_pFS->DeleteFile( sFilename ) )
 	{
@@ -678,8 +678,8 @@ void CNetworkFS::HandleCFSRename( void )
 	// Read in filename
 	if ( m_pComms->RecvData( (uint8_t*)pszOrigFilename, oRenameHdr.origFileNameLength ) != oRenameHdr.origFileNameLength )
 	{
-		delete pszOrigFilename;
-		delete pszNewFilename;
+		delete[] pszOrigFilename;
+		delete[] pszNewFilename;
 
 		SetError( "Rename read error" );
 		return;
@@ -689,8 +689,8 @@ void CNetworkFS::HandleCFSRename( void )
 
 	if ( m_pComms->RecvData( (uint8_t*)pszNewFilename, oRenameHdr.newFileNameLength ) != oRenameHdr.newFileNameLength )
 	{
-		delete pszOrigFilename;
-		delete pszNewFilename;
+		delete[] pszOrigFilename;
+		delete[] pszNewFilename;
 
 		SetError( "Rename read error" );
 		return;
@@ -701,8 +701,8 @@ void CNetworkFS::HandleCFSRename( void )
 	CUtil::String sOrigFilename = pszOrigFilename;
 	CUtil::String sNewFilename = pszNewFilename;
 
-	delete pszOrigFilename;
-	delete pszNewFilename;
+	delete[] pszOrigFilename;
+	delete[] pszNewFilename;
 
 	if ( !m_pFS->RenameFile( sOrigFilename, sNewFilename ) )
 	{

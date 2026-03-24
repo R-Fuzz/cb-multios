@@ -40,7 +40,7 @@ void Random::addEntropy(const uint8_t *entropy, unsigned int length)
         state ^= x & 0x77777777;
         state ^= state << 17;
     }
-    delete tmp;
+    delete[] tmp;
 }
 
 int32_t Random::randomInt32()

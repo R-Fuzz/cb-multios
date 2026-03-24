@@ -122,7 +122,7 @@ bool CMessageFragmentList::AddFragment( CMessagePacket *pPacket, CFullMessage *&
             pNewFullMessage = pNewFragmentData->AssembleFragments( );
 
             // Free memory
-            delete pNewFragmentData;
+            delete[] pNewFragmentData;
         }
         else
         {
@@ -181,7 +181,7 @@ CFullMessage::CFullMessage( uint8_t *pMessageData, uint32_t messageLength, bool 
 CFullMessage::~CFullMessage( )
 {
     if ( m_pMessageData )
-        delete m_pMessageData;
+        delete[] m_pMessageData;
 }
 
 CMessageHandler::CMessageHandler( )

@@ -53,7 +53,7 @@ CPRNG::CPRNG( uint32_t *pMagicPage, uint32_t magicPageByteSize )
 CPRNG::~CPRNG( )
 {
 	if ( m_pGeneratorMatrix )
-		delete m_pGeneratorMatrix;
+		delete[] m_pGeneratorMatrix;
 }
 
 uint32_t CPRNG::GetRandomU32( void )
@@ -141,7 +141,7 @@ void CPRNG::GenerateMatrix( void )
 			generatorPos = 0;
 	}
 
-	delete m_pGeneratorMatrix;
+	delete[] m_pGeneratorMatrix;
 	m_pGeneratorMatrix = pNewMatrix;
 
 	m_matrixSize = newMatrixSize;

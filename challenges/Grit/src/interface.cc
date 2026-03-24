@@ -356,7 +356,7 @@ void Interface::exportAudio(const Compression &comp)
     cgc_fwrite(&size, sizeof(size), cgc_stdout);
     cgc_fwrite(data, size, cgc_stdout);
 
-    delete data;
+    delete[] data;
     delete track;
 }
 
@@ -391,7 +391,7 @@ bool Interface::importAudio()
         }
     }
 
-    delete data;
+    delete[] data;
     return true;
 }
 

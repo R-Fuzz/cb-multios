@@ -52,5 +52,5 @@ void FxReverb::apply(AudioStream &stream) const
         stream.setSample(i, sample); // put mix into audio stream
     }
 
-    delete buffer;
+    delete[] buffer;
 }

@@ -166,7 +166,7 @@ void CPackageTracker::Run( void )
 	}
 
 	// Delete command buffer		
-	delete pCommandData;
+	delete[] pCommandData;
 }
 
 void CPackageTracker::SendResponse( uint8_t cmdNum, uint8_t cmdResponse, uint8_t *pResponseData, uint16_t responseLength )

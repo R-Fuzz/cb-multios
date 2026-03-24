@@ -31,7 +31,7 @@ AudioStream::AudioStream(unsigned int length_) : length(length_), size(length_)
 
 AudioStream::~AudioStream()
 {
-    delete samples;
+    delete[] samples;
 }
 
 AudioStream *AudioStream::fromSilence(unsigned int samples)
